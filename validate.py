@@ -3,7 +3,7 @@
 
 import argparse
 import math
-import re
+import hashlib
 import signal
 import subprocess
 import sys
@@ -15,7 +15,7 @@ from typing import NamedTuple
 
 # === Constants ===
 
-EXPECTED_VERSION = "# LINA_DISTRO_INDEX v1"
+EXPECTED_VERSION = "# LINA_DISTRO_INDEX v2"
 SCRIPT_DIR = Path(__file__).resolve().parent
 BUILD_INDEX = SCRIPT_DIR / "build_INDEX.sh"
 
@@ -34,7 +34,9 @@ class Color:
 
 
 class DistroRow(NamedTuple):
+    hash: str
     file: str
+    name: str
     archs: list[str]
     versions: list[str]
     desc: str
@@ -172,7 +174,7 @@ def check_version(build_index: Path) -> tuple[bool, str]:
 
 
 def parse_index(build_index: Path) -> list[DistroRow]:
-    """Run build_INDEX.sh and parse its CSV output into DistroRow list."""
+    """Run build_INDEX.sh and parse its TSV output into DistroRow list."""
     stdout, stderr, rc = run_bash(str(build_index))
     if rc != 0:
         print(f"{Color.RED}build_INDEX.sh failed (rc={rc}):{Color.RESET}")
@@ -184,14 +186,38 @@ def parse_index(build_index: Path) -> list[DistroRow]:
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        m = re.match(r'^([^,]+),([^,]+),(.+?)\s{2}#\s(.+)$', line)
-        if not m:
+        parts = line.split("\t")
+        if len(parts) != 6:
             continue
-        path, archs_str, versions_str, desc = m.groups()
+        hash_val, path, name, archs_str, versions_str, desc = parts
         archs = archs_str.split()
         versions = versions_str.split()
-        rows.append(DistroRow(file=path, archs=archs, versions=versions, desc=desc))
+        rows.append(DistroRow(
+            hash=hash_val,
+            file=path,
+            name=name,
+            archs=archs,
+            versions=versions,
+            desc=desc,
+        ))
     return rows
+
+
+def validate_row_hashes(rows: list[DistroRow]) -> tuple[list[DistroRow], list[str]]:
+    """Validate each row's md5 hash; return (rows, warnings)."""
+    warnings: list[str] = []
+    for row in rows:
+        archs_str = " ".join(row.archs)
+        versions_str = " ".join(row.versions)
+        computed = hashlib.md5(
+            f"{row.name}\t{archs_str}\t{versions_str}\t{row.desc}".encode()
+        ).hexdigest()
+        if computed != row.hash:
+            warnings.append(
+                f"[{row.file}] hash mismatch: "
+                f"computed={computed}, in-index={row.hash}"
+            )
+    return rows, warnings
 
 
 def resolve_distro_init(filepath: Path, arch: str, version: str) -> dict[str, str]:
@@ -442,6 +468,11 @@ def main() -> None:
 
     # Parse data source
     distro_rows = parse_index(build_index)
+
+    # Validate row hashes
+    distro_rows, hash_warnings = validate_row_hashes(distro_rows)
+    for w in hash_warnings:
+        print(f"{Color.YELLOW}警告: {w}{Color.RESET}", file=sys.stderr)
 
     # Filter by --path
     if args.path:

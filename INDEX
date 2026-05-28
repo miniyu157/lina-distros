@@ -1,7 +1,7 @@
-# LINA_DISTRO_INDEX v1
-# <path> <arch...> <version...>  # <description>
-distros/alpine.sh,aarch64 x86_64,latest-stable  # Alpine Linux (dl-cdn.alpinelinux.org)
-distros/arch-arm.sh,aarch64,latest  # ArchLinux ARM (os.archlinuxarm.org)
-distros/arch.sh,x86_64,latest  # ArchLinux (mirrors.tuna.tsinghua.edu.cn)
-distros/kali-nethunter.sh,aarch64,nano minimal full  # Kali NetHunter (kali.download)
-distros/ubuntu.sh,aarch64 x86_64,14.04 16.04 18.04 20.04 22.04 24.04 25.10 26.04  # Ubuntu Base (cdimage.ubuntu.com)
+# LINA_DISTRO_INDEX v2
+# <hash>	<path>	<name>	<archs>	<versions>	<desc>
+f35a813c2f802be50f686e406d62bf69	distros/alpine.sh	alpine	aarch64 x86_64	latest-stable	Alpine Linux (dl-cdn.alpinelinux.org)
+507d63b553d99ead0af35b5527758fa1	distros/arch-arm.sh	arch-arm	aarch64	latest	ArchLinux ARM (os.archlinuxarm.org)
+1e8da5265d28cd8352c89735f9fe9c34	distros/arch.sh	arch	x86_64	latest	ArchLinux (mirrors.tuna.tsinghua.edu.cn)
+99db39c94d7b8aea069c9017dcd50d7e	distros/kali-nethunter.sh	kali-nethunter	aarch64	nano minimal full	Kali NetHunter (kali.download)
+acb0247b3fd3c746d287aa1ed81a20f6	distros/ubuntu.sh	ubuntu	aarch64 x86_64	14.04 16.04 18.04 20.04 22.04 24.04 25.10 26.04	Ubuntu Base (cdimage.ubuntu.com)
