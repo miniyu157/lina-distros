@@ -1,7 +1,76 @@
-# LINA_DISTRO_INDEX v2
-# <hash>	<path>	<name>	<archs>	<versions>	<desc>
-f35a813c2f802be50f686e406d62bf69	distros/alpine.sh	alpine	aarch64 x86_64	latest-stable	Alpine Linux (dl-cdn.alpinelinux.org)
-507d63b553d99ead0af35b5527758fa1	distros/arch-arm.sh	arch-arm	aarch64	latest	ArchLinux ARM (os.archlinuxarm.org)
-1e8da5265d28cd8352c89735f9fe9c34	distros/arch.sh	arch	x86_64	latest	ArchLinux (mirrors.tuna.tsinghua.edu.cn)
-99db39c94d7b8aea069c9017dcd50d7e	distros/kali-nethunter.sh	kali-nethunter	aarch64	nano minimal full	Kali NetHunter (kali.download)
-acb0247b3fd3c746d287aa1ed81a20f6	distros/ubuntu.sh	ubuntu	aarch64 x86_64	14.04 16.04 18.04 20.04 22.04 24.04 25.10 26.04	Ubuntu Base (cdimage.ubuntu.com)
+{
+  "version": "LINA_DISTRO_INDEX v3",
+  "entries": [
+    {
+      "name": "alpine",
+      "path": "distros/alpine.sh",
+      "desc": "Alpine Linux (dl-cdn.alpinelinux.org)",
+      "archs": [
+        "aarch64",
+        "x86_64"
+      ],
+      "versions": [
+        "latest-stable"
+      ],
+      "hash": "7f0de278da4fd8c2a19106dc42f9dd0ef0b3f424df1038433cddd6ecb773b525"
+    },
+    {
+      "name": "arch-arm",
+      "path": "distros/arch-arm.sh",
+      "desc": "ArchLinux ARM (os.archlinuxarm.org)",
+      "archs": [
+        "aarch64"
+      ],
+      "versions": [
+        "latest"
+      ],
+      "hash": "f6c446851bae32a97580a89d89923c4947df5602852ec1e7615a6cd6c990b780"
+    },
+    {
+      "name": "arch",
+      "path": "distros/arch.sh",
+      "desc": "ArchLinux (mirrors.tuna.tsinghua.edu.cn)",
+      "archs": [
+        "x86_64"
+      ],
+      "versions": [
+        "latest"
+      ],
+      "hash": "b04688e235dff14f5a3cb34c45096e2934bab77b94cf80a50f13916857a3ac24"
+    },
+    {
+      "name": "kali-nethunter",
+      "path": "distros/kali-nethunter.sh",
+      "desc": "Kali NetHunter (kali.download)",
+      "archs": [
+        "aarch64"
+      ],
+      "versions": [
+        "nano",
+        "minimal",
+        "full"
+      ],
+      "hash": "8cfa52392d5a28afa94b5897e34d59d50b566a244a5740c363e3576c0e538371"
+    },
+    {
+      "name": "ubuntu",
+      "path": "distros/ubuntu.sh",
+      "desc": "Ubuntu Base (cdimage.ubuntu.com)",
+      "archs": [
+        "aarch64",
+        "x86_64"
+      ],
+      "versions": [
+        "14.04",
+        "16.04",
+        "18.04",
+        "20.04",
+        "22.04",
+        "24.04",
+        "25.10",
+        "26.04"
+      ],
+      "hash": "94e7752e51cab5e50827cd8aaf612bf49171567b7feec98f0892c82efeb307ac"
+    }
+  ]
+}

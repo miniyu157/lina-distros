@@ -2,8 +2,9 @@
 """Validate SRC URLs, HASH_VAL, and HASH_CMD for distro definitions."""
 
 import argparse
-import math
 import hashlib
+import json
+import math
 import signal
 import subprocess
 import sys
@@ -15,9 +16,9 @@ from typing import NamedTuple
 
 # === Constants ===
 
-EXPECTED_VERSION = "# LINA_DISTRO_INDEX v2"
+EXPECTED_VERSION = "LINA_DISTRO_INDEX v3"
 SCRIPT_DIR = Path(__file__).resolve().parent
-BUILD_INDEX = SCRIPT_DIR / "build_INDEX.sh"
+BUILD_INDEX = SCRIPT_DIR / "build_INDEX.py"
 
 
 class Color:
@@ -58,19 +59,7 @@ class CellResult(NamedTuple):
 # === Utilities ===
 
 
-def run_bash(bash_script: str, timeout: int = 60) -> tuple[str, str, int]:
-    try:
-        r = subprocess.run(
-            ["bash", "-c", bash_script],
-            capture_output=True, text=True, timeout=timeout,
-        )
-        return r.stdout, r.stderr, r.returncode
-    except subprocess.TimeoutExpired:
-        return "", f"timeout after {timeout}s", -1
-
-
 def resolve_build_index(path: Path | None) -> Path:
-    """Resolve the build_INDEX script path; exit if not found."""
     resolved = path or BUILD_INDEX
     if not resolved.is_file():
         print(f"错误: build_INDEX 脚本未找到: {resolved}", file=sys.stderr)
@@ -79,7 +68,6 @@ def resolve_build_index(path: Path | None) -> Path:
 
 
 def try_semantic_sort(versions: list[str]) -> list[str]:
-    """Sort versions as dotted-number tuples; keep original order if any fails."""
     try:
         parsed = [tuple(int(x) for x in v.split(".")) for v in versions]
         return [v for _, v in sorted(zip(parsed, versions))]
@@ -88,7 +76,6 @@ def try_semantic_sort(versions: list[str]) -> list[str]:
 
 
 def sample_items(items: list[str], limit: int) -> list[str]:
-    """Sample oldest ceil(N/2) + newest floor(N/2), deduplicated."""
     if limit <= 0 or not items:
         return []
     if len(items) <= limit:
@@ -118,16 +105,9 @@ def format_size(n: int) -> str:
 
 
 def resolve_path(query: str, candidates: list[str]) -> str | None:
-    """Resolve a user-supplied path against known distro file paths.
-
-    Tries: exact match, strip/add './' prefix, absolute<->relative conversion.
-    Returns the matched candidate path or None.
-    """
-    # 1. Exact match
     if query in candidates:
         return query
 
-    # 2. Strip or add './' prefix
     if query.startswith("./"):
         alt = query[2:]
     else:
@@ -135,7 +115,6 @@ def resolve_path(query: str, candidates: list[str]) -> str | None:
     if alt in candidates:
         return alt
 
-    # 3. Absolute <-> relative (relative to SCRIPT_DIR)
     try:
         qp = Path(query)
         if qp.is_absolute():
@@ -167,51 +146,66 @@ def resolve_path(query: str, candidates: list[str]) -> str | None:
 
 
 def check_version(build_index: Path) -> tuple[bool, str]:
-    """Verify build_INDEX.sh --version matches expected identifier."""
-    stdout, _stderr, _rc = run_bash(f"{build_index} --version")
-    actual = stdout.strip()
-    return actual == EXPECTED_VERSION, actual
+    try:
+        r = subprocess.run(
+            [sys.executable, str(build_index), "--version"],
+            capture_output=True, text=True, timeout=10,
+        )
+        actual = r.stdout.strip()
+        return actual == EXPECTED_VERSION, actual
+    except (subprocess.TimeoutExpired, OSError) as e:
+        return False, str(e)
 
 
 def parse_index(build_index: Path) -> list[DistroRow]:
-    """Run build_INDEX.sh and parse its TSV output into DistroRow list."""
-    stdout, stderr, rc = run_bash(str(build_index))
-    if rc != 0:
-        print(f"{Color.RED}build_INDEX.sh failed (rc={rc}):{Color.RESET}")
-        print(stderr)
+    try:
+        r = subprocess.run(
+            [sys.executable, str(build_index)],
+            capture_output=True, text=True, timeout=30,
+        )
+    except (subprocess.TimeoutExpired, OSError) as e:
+        print(f"{Color.RED}build_INDEX.py failed: {e}{Color.RESET}")
+        sys.exit(1)
+
+    if r.returncode != 0:
+        print(f"{Color.RED}build_INDEX.py failed (rc={r.returncode}):{Color.RESET}")
+        print(r.stderr)
+        sys.exit(1)
+
+    try:
+        data = json.loads(r.stdout)
+    except json.JSONDecodeError as e:
+        print(f"{Color.RED}build_INDEX.py output is not valid JSON: {e}{Color.RESET}")
+        sys.exit(1)
+
+    if data.get("version") != EXPECTED_VERSION:
+        print(
+            f"{Color.RED}INDEX version mismatch: expected '{EXPECTED_VERSION}', "
+            f"got '{data.get('version', '')}'{Color.RESET}"
+        )
         sys.exit(1)
 
     rows = []
-    for line in stdout.strip().splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        parts = line.split("\t")
-        if len(parts) != 6:
-            continue
-        hash_val, path, name, archs_str, versions_str, desc = parts
-        archs = archs_str.split()
-        versions = versions_str.split()
+    for entry in data.get("entries", []):
         rows.append(DistroRow(
-            hash=hash_val,
-            file=path,
-            name=name,
-            archs=archs,
-            versions=versions,
-            desc=desc,
+            hash=entry.get("hash", ""),
+            file=entry.get("path", ""),
+            name=entry.get("name", ""),
+            archs=entry.get("archs", []),
+            versions=entry.get("versions", []),
+            desc=entry.get("desc", ""),
         ))
     return rows
 
 
 def validate_row_hashes(rows: list[DistroRow]) -> tuple[list[DistroRow], list[str]]:
-    """Validate each row's md5 hash; return (rows, warnings)."""
     warnings: list[str] = []
     for row in rows:
-        archs_str = " ".join(row.archs)
-        versions_str = " ".join(row.versions)
-        computed = hashlib.md5(
-            f"{row.name}\t{archs_str}\t{versions_str}\t{row.desc}".encode()
-        ).hexdigest()
+        filepath = SCRIPT_DIR / row.file
+        if not filepath.is_file():
+            warnings.append(f"[{row.file}] file not found, cannot verify hash")
+            continue
+        computed = hashlib.sha256(filepath.read_bytes()).hexdigest()
         if computed != row.hash:
             warnings.append(
                 f"[{row.file}] hash mismatch: "
@@ -220,36 +214,20 @@ def validate_row_hashes(rows: list[DistroRow]) -> tuple[list[DistroRow], list[st
     return rows, warnings
 
 
-def resolve_distro_init(filepath: Path, arch: str, version: str) -> dict[str, str]:
-    """Call distro_init with arch-first order; fall back to version-first on failure."""
-    for arg1, arg2 in ((arch, version), (version, arch)):
-        script = (
-            f'source "{filepath}" 2>/dev/null\n'
-            f'distro_init "{arg1}" "{arg2}" 2>/dev/null\n'
-            f'echo "RC=$?"\n'
-            f'printf "SRC=%s\\n" "${{SRC:-}}"\n'
-            f'printf "HASH_VAL=%s\\n" "${{HASH_VAL:-}}"\n'
-            f'printf "HASH_CMD=%s\\n" "${{HASH_CMD:-}}"\n'
+def resolve_distro_get(filepath: Path, version: str, arch: str) -> dict[str, str]:
+    try:
+        r = subprocess.run(
+            ["bash", str(filepath), "get", version, arch],
+            capture_output=True, text=True, timeout=60,
         )
-        stdout, _stderr, _rc = run_bash(script)
-        result = {}
-        for line in stdout.strip().splitlines():
-            if not line:
-                continue
-            if "=" in line:
-                k, v = line.split("=", 1)
-                result[k] = v
-        if result.get("RC") == "0":
-            return {
-                "SRC": result.get("SRC", ""),
-                "HASH_VAL": result.get("HASH_VAL", ""),
-                "HASH_CMD": result.get("HASH_CMD", ""),
-            }
-    return {"SRC": "", "HASH_VAL": "", "HASH_CMD": ""}
+        if r.returncode != 0:
+            return {}
+        return json.loads(r.stdout)
+    except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
+        return {}
 
 
 def head_request(url: str, timeout: int = 15) -> tuple[int, int, str]:
-    """Perform HEAD request. Returns (status_code, content_length, error_string)."""
     if not url:
         return 0, 0, "empty SRC"
     try:
@@ -267,7 +245,6 @@ def head_request(url: str, timeout: int = 15) -> tuple[int, int, str]:
 
 
 def _hash_algo_tag(hash_val: str) -> str:
-    """Return an algorithm tag inferred from hex string length, e.g. '[SHA256]'."""
     if not all(c in "0123456789abcdefABCDEF" for c in hash_val):
         return f"[RAW:{len(hash_val)}]"
     algo_map = {32: "MD5", 40: "SHA1", 64: "SHA256", 128: "SHA512"}
@@ -275,11 +252,6 @@ def _hash_algo_tag(hash_val: str) -> str:
 
 
 def check_hash_val(hash_val: str) -> tuple[str, str]:
-    """Inspect HASH_VAL.
-
-    Statuses: FAIL (empty), SKIP (literal), URL (reachable hash URL),
-              WARN (unreachable URL), PRESENT (raw hash string, unverified).
-    """
     if not hash_val:
         return "FAIL", "(empty)"
     if hash_val == "SKIP":
@@ -297,11 +269,10 @@ def check_hash_val(hash_val: str) -> tuple[str, str]:
 
 
 def _merge_hash_columns(hash_val: str, hash_status: str, hash_cmd: str) -> str:
-    """Merge HASH_VAL display and HASH_CMD into a single hash column string."""
     if hash_status == "SKIP":
         return "SKIP"
     if hash_status == "FAIL":
-        return hash_val  # "(empty)"
+        return hash_val
 
     algo = hash_cmd.replace("sum", "") if hash_cmd else "?"
 
@@ -309,7 +280,7 @@ def _merge_hash_columns(hash_val: str, hash_status: str, hash_cmd: str) -> str:
         tokens = hash_val.split(" ")
         status_part = " ".join(tokens[:2]) if len(tokens) >= 2 else hash_val
         return f"{algo} [{status_part}]"
-    else:  # PRESENT
+    else:
         return algo
 
 
@@ -321,7 +292,6 @@ def build_report_table(results: list[CellResult]) -> str:
     max_w = {"file": 5, "arch": 4, "version": 7, "src": 3, "hash": 5}
 
     for r in results:
-        # SRC column: status + size + filename from URL
         if r.src:
             filename = urllib.parse.urlparse(r.src).path.rstrip("/").rsplit("/", 1)[-1] or "-"
         else:
@@ -343,7 +313,6 @@ def build_report_table(results: list[CellResult]) -> str:
         for k in max_w:
             max_w[k] = max(max_w[k], len(rows[-1][k]))
 
-    # cap column widths
     caps = {"file": 35, "src": 60, "hash": 40}
     for k, cap in caps.items():
         max_w[k] = min(max_w[k], cap)
@@ -372,7 +341,7 @@ def build_report_table(results: list[CellResult]) -> str:
             hash_color = Color.YELLOW
         elif h == "SKIP":
             hash_color = Color.DIM
-        else:  # "URL" or "PRESENT"
+        else:
             hash_color = Color.GREEN
 
         line = (
@@ -436,7 +405,7 @@ def build_argparser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--build-index", type=Path, default=None, metavar="PATH",
-        help="指定自定义 INDEX 生成脚本路径（默认: build_INDEX.sh）",
+        help="指定自定义 INDEX 生成脚本路径（默认: build_INDEX.py）",
     )
     parser.add_argument(
         "--version", action="version",
@@ -454,10 +423,8 @@ def main() -> None:
 
     args = build_argparser().parse_args()
 
-    # Resolve build index script
     build_index = resolve_build_index(args.build_index)
 
-    # Version check -- silent on success, fail fast on mismatch
     ok, actual = check_version(build_index)
     if not ok:
         print(
@@ -466,15 +433,12 @@ def main() -> None:
         )
         sys.exit(1)
 
-    # Parse data source
     distro_rows = parse_index(build_index)
 
-    # Validate row hashes
     distro_rows, hash_warnings = validate_row_hashes(distro_rows)
     for w in hash_warnings:
         print(f"{Color.YELLOW}警告: {w}{Color.RESET}", file=sys.stderr)
 
-    # Filter by --path
     if args.path:
         matched = resolve_path(args.path, [r.file for r in distro_rows])
         if matched is None:
@@ -482,7 +446,6 @@ def main() -> None:
             sys.exit(1)
         distro_rows = [r for r in distro_rows if r.file == matched]
 
-    # Validate
     results: list[CellResult] = []
     total_distros = len(distro_rows)
 
@@ -508,23 +471,22 @@ def main() -> None:
         filepath = SCRIPT_DIR / row.file
         for arch in archs:
             for ver in versions:
-                d = resolve_distro_init(filepath, arch, ver)
-                src_status, src_size, src_error = head_request(d["SRC"])
-                hash_status, hash_display = check_hash_val(d["HASH_VAL"])
+                d = resolve_distro_get(filepath, ver, arch)
+                src_status, src_size, src_error = head_request(d.get("src", ""))
+                hash_status, hash_display = check_hash_val(d.get("hash_val", ""))
                 results.append(CellResult(
                     file=row.file,
                     arch=arch,
                     version=ver,
-                    src=d["SRC"],
+                    src=d.get("src", ""),
                     src_status=src_status,
                     src_size=src_size,
                     src_error=src_error,
                     hash_val=hash_display,
                     hash_status=hash_status,
-                    hash_cmd=d["HASH_CMD"],
+                    hash_cmd=d.get("hash_cmd", ""),
                 ))
 
-    # Report
     print()
     print(build_report_table(results))
     print()
