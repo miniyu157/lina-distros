@@ -6,7 +6,7 @@ set -euo pipefail
 shopt -s inherit_errexit 2> /dev/null || true
 
 info() {
-    cat << EOF
+    cat << 'EOF'
 {
   "desc": "Alpine Linux (dl-cdn.alpinelinux.org)",
   "archs": ["aarch64", "x86_64"],

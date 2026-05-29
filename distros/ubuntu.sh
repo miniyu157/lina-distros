@@ -22,7 +22,7 @@ get() {
     local arch_pattern
     case "$arch" in
         aarch64) arch_pattern="base-arm64.tar.gz" ;;
-        x86_64)  arch_pattern="base-amd64.tar.gz" ;;
+        x86_64) arch_pattern="base-amd64.tar.gz" ;;
         *)
             printf "Error: Unsupported arch: %s\n" "$arch" >&2
             return 1
