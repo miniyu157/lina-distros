@@ -34,8 +34,7 @@ get() {
 {
   "src": "${src}",
   "hash_val": "${hash_val}",
-  "hash_cmd": "sha256sum",
-  "tar_strip": 1
+  "hash_cmd": "sha256sum"
 }
 EOF
 }
