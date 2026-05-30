@@ -8,18 +8,25 @@ shopt -s inherit_errexit 2> /dev/null || true
 info() {
     cat << 'EOF'
 {
-  "desc": "Alpine Linux (dl-cdn.alpinelinux.org)",
+  "desc": "Alpine Linux",
   "archs": ["aarch64", "x86_64"],
-  "versions": ["latest-stable"]
+  "versions": ["latest-stable"],
+  "mirrors": [
+    "https://mirrors.tuna.tsinghua.edu.cn/alpine/",
+    "https://mirrors.aliyun.com/alpine/",
+    "https://mirror.xtom.com.hk/alpine/",
+    "https://dl-cdn.alpinelinux.org/alpine/"
+  ]
 }
 EOF
 }
 
 get() {
-    local version="${1}" arch="${2}"
+    local default_mirror='https://dl-cdn.alpinelinux.org/alpine/'
+    local version="${1}" arch="${2}" mirror="${3:-$default_mirror}"
     [[ -z $version || -z $arch ]] && usage
 
-    local yaml_url="https://dl-cdn.alpinelinux.org/alpine/${version}/releases/${arch}/latest-releases.yaml"
+    local yaml_url="${mirror}${version}/releases/${arch}/latest-releases.yaml"
     local yaml_text
     yaml_text=$(curl -fsSL --connect-timeout 10 --max-time 30 "$yaml_url")
     local filename
@@ -31,7 +38,7 @@ get() {
         return 1
     }
     local src
-    src="https://dl-cdn.alpinelinux.org/alpine/${version}/releases/${arch}/${filename}"
+    src="${mirror}${version}/releases/${arch}/${filename}"
 
     cat << EOF
 {
@@ -43,7 +50,7 @@ EOF
 }
 
 usage() {
-    echo "usage: $0 {info | get <version> <arch> }" >&2
+    echo "usage: $0 {info | get <version> <arch> [mirror] }" >&2
     exit 1
 }
 
@@ -53,7 +60,7 @@ main() {
             info
             ;;
         get)
-            get "${2:-}" "${3:-}"
+            get "${2:-}" "${3:-}" "${4:-}"
             ;;
         *) usage ;;
     esac
