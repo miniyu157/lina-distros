@@ -8,7 +8,7 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 DISTROS_DIR = SCRIPT_DIR / "distros"
-VERSION = "LINA_DISTRO_INDEX v3.1"
+VERSION = "v3.1"
 
 
 def run_info(script: Path) -> dict | None:

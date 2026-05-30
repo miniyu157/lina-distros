@@ -16,7 +16,7 @@ from typing import NamedTuple
 
 # === Constants ===
 
-EXPECTED_VERSION = "LINA_DISTRO_INDEX v3.1"
+EXPECTED_VERSION = "v3.1"
 SCRIPT_DIR = Path(__file__).resolve().parent
 BUILD_INDEX = SCRIPT_DIR / "build_INDEX.py"
 

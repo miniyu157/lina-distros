@@ -1,0 +1,306 @@
+根据以下需求进行代码迭代。
+
+阅读 ./validate，保持业务逻辑不变，完全重构为 python 脚本。
+保持单文件 ./validate.py
+
+- shebang 开头：#!/usr/bin/env ...
+- 优先使用 python 标准库，如必须引入第三方依赖，请同时修改 requirements.txt
+
+编码原则：
+- KISS 原则，从简，不要过度设计，使用现代化方案
+- 代码即文档，只允许保留对开发者有帮助的注释
+
+代码需要经过充分的调试与修复，最终交付生产级别代码。
+
+遇到不明确的迭代细节，请进行充分的沟通。
+
+完成任务后，根据多行的提交历史，撰写简明扼要的多行提交信息，
+并执行 git 提交所有需要的文件。
+
+---
+
+可以使用 dataclasses 替代字典，
+textwrap.dedent 操作 Bash 字符串拼接，
+引入类型注释，使用 argparse 解析命令行参数，
+消除 global errors 相关的坏味道。
+
+代码需要经过充分的调试与修复，逐步达到生产级别代码。
+可以使用 ruff 工具进行检查、测试、格式化。
+遇到不明确的迭代细节，请进行充分的沟通。
+
+完成任务后，根据多行的提交历史，撰写简明扼要的多行提交信息，
+并执行 git 提交所有需要的文件。
+
+---
+
+我找到了archlinux arm最新可用的的中科大源与官方源：
+
+http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz
+http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz.md5
+
+https://mirrors.tuna.tsinghua.edu.cn/archlinuxarm/os/ArchLinuxARM-aarch64-latest.tar.gz
+https://mirrors.tuna.tsinghua.edu.cn/archlinuxarm/os/ArchLinuxARM-aarch64-latest.tar.gz.md5
+
+现在进行更新发行版数据文件与INDEX索引文件。
+这两个不同源需要进行合适的区分
+
+---
+
+现在需要将 alpine 只支持 latest-stable 版本
+并且新增 x86_64 架构。
+
+以下是抓取到的两个文件，需要在定义文件中解析。
+
+# https://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/aarch64/latest-releases.yaml
+# 直链（找到 rootfs 和 file 字段）：https://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/aarch64/alpine-minirootfs-3.23.4-aarch64.tar.gz
+
+# https://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/x86_64/latest-releases.yaml
+# 直链（找到 rootfs 和 file 字段）：https://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/x86_64/alpine-minirootfs-3.23.4-x86_64.tar.gz
+
+可以使用 ./validate.py -u 或 ./validate.py 进行测试。
+完成任务后，根据多行的提交历史，撰写简明扼要的多行提交信息，
+并执行 git 提交所有需要的文件。
+
+---
+
+- UNIX 原则，各个模块职责边界清晰且严格，分工明确
+- OCP 原则，对扩展开放，对修改关闭
+- 沉默是金 原则，出现异常再打印输出
+
+---
+
+根据以下需求进行代码迭代。
+
+编写单文件 validate.py 工具，对定义的.sh文件，进行SRC、HASH_VAL、HASH_CMD的有效性验证。
+
+1. 我们默认 build_INDEX.sh 就在所在文件夹下。
+
+硬编码版本标识符为 "# LINA_DISTRO_INDEX v1"，执行 build_INDEX --version 可以获取版本标识符，进行校验。
+运行时应当直观的表示版本标识符，有助于人类区分。
+
+2. 校验成功后，方可运行测试。
+
+比如验证文件大小，HEAD请求返回状态码、大小等元数据、整体返回码。
+HASH_VAL（候选：标准sum文件的URL；纯净sum；SKIP）是否可以成功获取等等，不做任何case处理，只交付获取到的原始数据。
+
+捕获 build_INDEX.sh 的标准输出，获得索引数据作为数据源。
+
+可以内联 bash，传入参数运行 distro_init 方法解析具体的发行版.sh文件。
+测试 OPTION_ARCH、OPTION_VERSIONS。
+在 argparse 中，可以指定测试范围，例如指定 OPTION_ARCH=5 （默认测试5个），OPTION_VERSIONS=4 （默认测试4个，取最新和最老的各 2 个版本）
+对版本进行采样，取最新和最老的各 N 个版本，避免全量测试耗时过长。
+需要处理边缘情况，例如 OPTION_ARCH/OPTION_VERSIONS 过少/为0 的情况。
+支持使用参数，对 <path> 的路径全字匹配，缩小范围到那个文件。
+
+测试报告清晰可读，进行制表。一个最小单元为一行。输出过长可以适当的使用省略号省略。
+
+编码原则：
+- shebang 开头：#!/usr/bin/env ...
+- 优先使用 python 标准库，如必须引入第三方依赖，请同时修改 requirements.txt
+- 不要过度设计与防御，严格区分职责边界。
+- KISS 原则，从简，不要过度设计，使用现代化方案
+- 严禁进行任何形式的 具体数据硬编码，例如名称、正则提取等。
+- 代码即文档，仅仅保留对开发者有帮助的注释，有助于人类理解机械数据。
+
+代码需要经过充分的调试与修复，最终交付生产级别代码。
+
+使用 ruff 工具检查代码。但不要使用 format 指令。
+
+遇到不明确的迭代细节，请进行充分的沟通。
+
+完成任务后，根据多行的提交历史，撰写简明扼要的多行提交信息，
+并执行 git 提交所有需要的文件。
+
+---
+
+根据以下需求进行代码迭代。
+
+描述：单文件 validate.py 工具，对定义的.sh文件，进行SRC、HASH_VAL、HASH_CMD的有效性验证。
+
+制表，格式化：
+- 目前将正在操作的INDEX都打印了一遍，
+  这里应该展示为类似（n/N）的进度条。
+- HASH_VAL 列目前展示了很长的 hash，
+  需要表达为格式正确，但不要和hash校验成功产生歧义（例如[OK]，可能被解读为哈希校验正确）。
+- 移除 Size 列，合并到 SRC 列，
+  展示 状态码+大小+原始文件名称
+- HASH_VAL 列如果为URL格式，则新增显示文件名称。
+
+版本标识：
+- 目前即使版本标识符错误，依旧运行了测试。
+  应当重定向到标准错误，然后退出程序，返回非零状态码。
+- 目前测试中开头打印输出了版本标识，
+  版本标识不应当在测试中打印，除非他出现了异常，
+  应当在 --help 中展示版本标识。
+
+参数解析：
+- --file 若输入路径时错误，应当自动尝试解析：
+  - 绝对路径 <-> 相对路径 互相转换
+  - 相对路径 移除或者添加开头的 './'。
+  改为 --path，依旧从索引数据中解析
+    匹配失败时，应当只显示匹配失败: xxx
+    不要列出可用的path。
+
+索引生成器：
+- build_INDEX.sh 若找不到，则报错到标准错误，然后退出程序，返回非零状态码。
+- 添加 --build-index 选项，可以指定生成器脚本。
+
+代码需要经过充分的调试与修复，最终交付生产级别代码。
+
+使用 ruff 工具检查代码。但不要使用 format 指令。
+
+遇到不明确的迭代细节，请进行充分的沟通。
+
+完成任务后，根据多行的提交历史，撰写简明扼要的多行提交信息，
+并执行 git 提交所有需要的文件。
+
+---
+
+目前的 HASH_VAL 列似乎依旧展示了原始长 hash，需要表达为“格式正确”，表示用户知道了长度是正确的，不是空白，不是错误的符号。但不要和hash校验成功产生歧义（例如[OK]，可能被解读为哈希校验正确）。
+注意：不能带有明确的哈希值，没有任何意义，只需要表达格式即可
+
+---
+
+根据以下需求进行代码迭代。
+
+制表，格式化：
+- 合并 HASH 相关的两列：
+  HASH_CMD 和 HASH_VAL 可以合并为一列 Hash。
+  例如：
+  原本：[SHA256] | sha256sum 合并为：sha256
+  原本：HTTP 200... | md5sum 合并为：md5 [HTTP 200]
+  SKIP保持SKIP
+
+去除sum，去除HTTP的hash文件名
+
+遇到不明确的迭代细节，请进行充分的沟通。
+
+完成任务后，根据多行的提交历史，撰写简明扼要的多行提交信息，
+并执行 git 提交所有需要的文件。
+
+---
+
+根据以下需求进行代码迭代。
+
+描述：
+- 单文件 validate.py 工具，对定义的.sh文件，进行SRC、HASH_VAL、HASH_CMD的有效性验证。
+- 索引生成脚本 ./build_INDEX.sh，根据定义的.sh 文件生成基础索引并打印，可以使用 --version 获取版本标识。
+- ./INDEX 为生成产物。
+
+为了减少下游解析成本，现在需要将 ./build_INDEX.sh 索引生成脚本和 validate.py 数据验证脚本 标识升级到 v2
+
+数据结构：
+- 目前INDEX为<path>,<archs>,<versions>  # <description>
+  应该把DESC作为数据，而不是注释，减少下游解析成本。
+  使用标准、严格的 tsv 数据存储。
+  那么现在需要重新定义数据结构：
+  INDEX(tsv) 每行:
+  <hash=md5(name+archs+versions+desc)>	<path>	<name>	<archs>	<versions>	<desc>
+  其中 <name> 从 basename <path> .sh 获取。
+
+代码需要经过充分的调试与修复，最终交付生产级别代码。
+
+使用 ruff 工具检查代码。但不要使用 format 指令。
+
+遇到不明确的迭代细节，请进行充分的沟通。
+
+完成任务后，根据多行的提交历史，撰写简明扼要的多行提交信息，
+并执行 git 提交所有需要的文件。
+
+---
+
+根据以下需求进行代码迭代。
+
+这是一个存储发行版源的仓库。
+上一个提交中，distros/alpine.sh 升级到了新的规范。
+
+- 将 distros 文件夹中的所有文件都升级，保持风格和规范一致。
+- build_INDEX.sh 为废弃的 "# LINA_DISTRO_INDEX v2" 索引生成器。
+  需要编写一个 build_INDEX.py，遵循 v3 规范，检查 JSON 数据格式。生成数据为 JSON。
+  移除旧的索引生成器。
+- 将 validate.py 索引文件验证脚本也兼容新的 v3 规范，过程中一并检查 JSON 数据格式。
+- 编辑文件 /home/yumeka/Dev/_github/lina/cells/d/，新增 v3 规范的文档，需要嵌入一段标准 sh 模板。
+
+编码原则：
+- shebang 开头：#!/usr/bin/env ...
+- 优先使用 python 标准库，如必须引入第三方依赖，请同时修改 requirements.txt
+- 符合 KISS 原则，从简，不要过度设计，使用现代化方案
+- 符合 UNIX 原则，每个模块或子命令职责边界清晰。
+- 不要过度设计与防御，严格区分职责边界。
+- 符合开闭原则，对扩展开放，对修改关闭。
+- 不应硬编码的数据严禁硬编码。
+- 代码即文档，不要保留低质量无意义注释。
+
+代码需要经过充分的调试与修复，最终交付生产级别代码。
+
+使用 ruff 工具检查代码。但不要使用 format 指令。
+
+遇到不明确的迭代细节，请进行充分的沟通。
+
+完成任务后，根据多行的提交历史，撰写简明扼要的多行提交信息，
+并执行 git 提交所有需要的文件。
+
+---
+
+根据以下需求进行代码迭代。
+
+这是一个存储发行版源的仓库。
+上一个提交（404d59d）中， alpine 和 archlinux 已经升级到了新的 v3.1 规范。
+v3.1 发行版定义文件具体改动细节：
+```
+commit 404d59d30b549cead382aa386dcb3d751af199d3
+Author: arch <miniyu157@163.com>
+Date:   Sat May 30 13:55:37 2026 +0800
+
+    feat(distros): alpine archlinux 领先实现 v3.1 规范，准备迁移
+
+    v3.1 发行版定义文件: info 输出新增 mirrors 数组, get 支持传入
+    mirror(可选, 函数内部回退)
+
+    v3.1 完全兼容 v3 接口
+
+    arch-arm 重命名: archlinux-arm
+    arch 重命名: archlinux
+
+    archlinux:
+    - 新增版本支持: 2026.05.01, 2026.04.01, 2026.03.01
+    - 更改解析逻辑: 文件名和 hash_val 由 hashes 中提取,
+      version 为 latest 时, src 的文件名指向一个确切的版本号
+    - arch 拦截: 强制要求传入 x86_64
+
+    alpine:
+    - 落地 v3.1
+```
+
+- 将 distros 文件夹中的所有文件都升级，保持风格和规范一致。
+- build_INDEX.sh 为废弃的 "# LINA_DISTRO_INDEX v3" 索引生成器。
+  需要迭代 build_INDEX.py，遵循 v3.1 规范。
+  重构：不编码特定字段名称进行读取，
+  而是直接使用 info 命令的 JSON 输出，检查合法性，然后添加必要的 path、name、hash 字段
+  hash 保持为脚本内容的 sha256 hash
+
+- 将 validate.py 索引文件验证脚本重构：
+  职责减轻，无需验证 JSON 合法性，也无需解析 hash_val 的 URL 形式（v3和v3.1都规定了只能填入 hex 字符串或者 "SKIP"）
+  无需为 v3.1 的 mirror 字段编写测试，保持仅传入 version 和 arch
+
+- 编辑客户端仓库文件夹 /home/yumeka/Dev/_github/lina/cells/d/，新增 v3.1 规范的文档。
+- 只需为 lina 客户端编写文档即可。
+
+编码原则：
+- shebang 开头：#!/usr/bin/env ...
+- 优先使用 python 标准库，如必须引入第三方依赖，请同时修改 requirements.txt
+- 符合 KISS 原则，从简，不要过度设计，使用现代化方案
+- 符合 UNIX 原则，每个模块或子命令职责边界清晰。
+- 不要过度设计与防御，严格区分职责边界。
+- 符合开闭原则，对扩展开放，对修改关闭。
+- 不应硬编码的数据严禁硬编码。
+- 代码即文档，不要保留低质量无意义注释。
+
+代码需要经过充分的调试与修复，最终交付生产级别代码。
+
+使用 ruff 工具检查代码。但不要使用 format 指令。
+
+遇到不明确的迭代细节，请进行充分的沟通。
+
+完成任务后，根据多行的提交历史，撰写简明扼要的多行提交信息，
+并执行 git 提交所有需要的文件。
