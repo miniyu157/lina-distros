@@ -8,15 +8,22 @@ shopt -s inherit_errexit 2> /dev/null || true
 info() {
     cat << 'EOF'
 {
-  "desc": "Ubuntu Base (cdimage.ubuntu.com)",
+  "desc": "Ubuntu Base",
   "archs": ["aarch64", "x86_64"],
-  "versions": ["14.04", "16.04", "18.04", "20.04", "22.04", "24.04", "25.10", "26.04"]
+  "versions": ["14.04", "16.04", "18.04", "20.04", "22.04", "24.04", "25.10", "26.04"],
+  "mirrors": [
+    "https://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/",
+    "https://mirrors.aliyun.com/ubuntu-cdimage/",
+    "https://mirrors.ustc.edu.cn/ubuntu-cdimage/",
+    "https://cdimage.ubuntu.com/"
+  ]
 }
 EOF
 }
 
 get() {
-    local version="${1}" arch="${2}"
+    local default_mirror='https://cdimage.ubuntu.com/'
+    local version="${1}" arch="${2}" mirror="${3:-$default_mirror}"
     [[ -z $version || -z $arch ]] && usage
 
     local arch_pattern
@@ -29,7 +36,7 @@ get() {
             ;;
     esac
 
-    local sum_url="https://cdimage.ubuntu.com/ubuntu-base/releases/${version}/release/SHA256SUMS"
+    local sum_url="${mirror}ubuntu-base/releases/${version}/release/SHA256SUMS"
     local tar_file
     tar_file=$(curl -fsSL --connect-timeout 10 --max-time 30 "$sum_url" | grep "$arch_pattern" | awk '{print $2}' | sed 's/^\*//' | sort -V | tail -1)
     [[ -z $tar_file ]] && {
@@ -44,7 +51,7 @@ get() {
         return 1
     }
 
-    local src="https://cdimage.ubuntu.com/ubuntu-base/releases/${version}/release/${tar_file}"
+    local src="${mirror}ubuntu-base/releases/${version}/release/${tar_file}"
 
     cat << EOF
 {
@@ -56,7 +63,7 @@ EOF
 }
 
 usage() {
-    echo "usage: $0 {info | get <version> <arch> }" >&2
+    echo "usage: $0 {info | get <version> <arch> [mirror] }" >&2
     exit 1
 }
 
@@ -66,7 +73,7 @@ main() {
             info
             ;;
         get)
-            get "${2:-}" "${3:-}"
+            get "${2:-}" "${3:-}" "${4:-}"
             ;;
         *) usage ;;
     esac

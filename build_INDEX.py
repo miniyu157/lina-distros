@@ -8,7 +8,7 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 DISTROS_DIR = SCRIPT_DIR / "distros"
-VERSION = "LINA_DISTRO_INDEX v3"
+VERSION = "LINA_DISTRO_INDEX v3.1"
 
 
 def run_info(script: Path) -> dict | None:
@@ -20,11 +20,7 @@ def run_info(script: Path) -> dict | None:
         if r.returncode != 0:
             return None
         data = json.loads(r.stdout)
-        if not isinstance(data.get("desc"), str):
-            return None
-        if not isinstance(data.get("archs"), list) or not data["archs"]:
-            return None
-        if not isinstance(data.get("versions"), list) or not data["versions"]:
+        if not isinstance(data, dict) or not data:
             return None
         return data
     except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
@@ -42,14 +38,13 @@ def build_entries() -> list[dict]:
         if info is None:
             print(f"Warning: skipping invalid script: {script}", file=sys.stderr)
             continue
-        entries.append({
+        entry: dict[str, object] = {
             "name": script.stem,
             "path": str(script.relative_to(SCRIPT_DIR)),
-            "desc": info["desc"],
-            "archs": info["archs"],
-            "versions": info["versions"],
-            "hash": compute_file_hash(script),
-        })
+        }
+        entry.update(info)
+        entry["hash"] = compute_file_hash(script)
+        entries.append(entry)
     return entries
 
 

@@ -10,17 +10,21 @@ info() {
 {
   "desc": "ArchLinux ARM (os.archlinuxarm.org)",
   "archs": ["aarch64"],
-  "versions": ["latest"]
+  "versions": ["latest"],
+  "mirrors": [
+    "http://os.archlinuxarm.org/os/"
+  ]
 }
 EOF
 }
 
 get() {
-    local version="${1}" arch="${2}"
+    local default_mirror='http://os.archlinuxarm.org/os/'
+    local version="${1}" arch="${2}" mirror="${3:-$default_mirror}"
     [[ -z $version || -z $arch ]] && usage
 
-    local src="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz"
-    local md5_url="http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz.md5"
+    local src="${mirror}ArchLinuxARM-aarch64-latest.tar.gz"
+    local md5_url="${mirror}ArchLinuxARM-aarch64-latest.tar.gz.md5"
     local hash_val
     hash_val=$(curl -fsSL --connect-timeout 10 --max-time 30 "$md5_url" | awk '{print $1}')
     [[ -z $hash_val ]] && {
@@ -38,7 +42,7 @@ EOF
 }
 
 usage() {
-    echo "usage: $0 {info | get <version> <arch> }" >&2
+    echo "usage: $0 {info | get <version> <arch> [mirror] }" >&2
     exit 1
 }
 
@@ -48,7 +52,7 @@ main() {
             info
             ;;
         get)
-            get "${2:-}" "${3:-}"
+            get "${2:-}" "${3:-}" "${4:-}"
             ;;
         *) usage ;;
     esac

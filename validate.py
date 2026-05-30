@@ -16,7 +16,7 @@ from typing import NamedTuple
 
 # === Constants ===
 
-EXPECTED_VERSION = "LINA_DISTRO_INDEX v3"
+EXPECTED_VERSION = "LINA_DISTRO_INDEX v3.1"
 SCRIPT_DIR = Path(__file__).resolve().parent
 BUILD_INDEX = SCRIPT_DIR / "build_INDEX.py"
 
@@ -51,7 +51,6 @@ class CellResult(NamedTuple):
     src_status: int
     src_size: int
     src_error: str
-    hash_val: str
     hash_status: str
     hash_cmd: str
 
@@ -244,44 +243,23 @@ def head_request(url: str, timeout: int = 15) -> tuple[int, int, str]:
         return 0, 0, str(e)
 
 
-def _hash_algo_tag(hash_val: str) -> str:
-    if not all(c in "0123456789abcdefABCDEF" for c in hash_val):
-        return f"[RAW:{len(hash_val)}]"
-    algo_map = {32: "MD5", 40: "SHA1", 64: "SHA256", 128: "SHA512"}
-    return f"[{algo_map.get(len(hash_val), f'HEX:{len(hash_val)}')}]"
-
-
-def check_hash_val(hash_val: str) -> tuple[str, str]:
+def check_hash_val(hash_val: str) -> str:
     if not hash_val:
-        return "FAIL", "(empty)"
+        return "FAIL"
     if hash_val == "SKIP":
-        return "SKIP", "SKIP"
-    if hash_val.startswith(("http://", "https://")):
-        status, _size, err = head_request(hash_val)
-        filename = urllib.parse.urlparse(hash_val).path.rstrip("/").rsplit("/", 1)[-1] or "-"
-        if err:
-            return "WARN", f"HTTP {status} {filename}" if status else f"{err} {filename}"
-        return "URL", f"HTTP {status} {filename}"
-    return "PRESENT", _hash_algo_tag(hash_val)
+        return "SKIP"
+    return "PRESENT"
 
 
 # === Report ===
 
 
-def _merge_hash_columns(hash_val: str, hash_status: str, hash_cmd: str) -> str:
+def _merge_hash_columns(hash_status: str, hash_cmd: str) -> str:
     if hash_status == "SKIP":
         return "SKIP"
     if hash_status == "FAIL":
-        return hash_val
-
-    algo = hash_cmd.replace("sum", "") if hash_cmd else "?"
-
-    if hash_status in ("URL", "WARN"):
-        tokens = hash_val.split(" ")
-        status_part = " ".join(tokens[:2]) if len(tokens) >= 2 else hash_val
-        return f"{algo} [{status_part}]"
-    else:
-        return algo
+        return "FAIL"
+    return hash_cmd.replace("sum", "") if hash_cmd else "?"
 
 
 def build_report_table(results: list[CellResult]) -> str:
@@ -301,7 +279,7 @@ def build_report_table(results: list[CellResult]) -> str:
         else:
             src_display = f"{r.src_status or 'ERR'} {r.src_error or '-'}"
 
-        hash_display = _merge_hash_columns(r.hash_val, r.hash_status, r.hash_cmd)
+        hash_display = _merge_hash_columns(r.hash_status, r.hash_cmd)
 
         rows.append({
             "file": r.file,
@@ -337,8 +315,6 @@ def build_report_table(results: list[CellResult]) -> str:
         h = r.hash_status
         if h == "FAIL":
             hash_color = Color.RED
-        elif h == "WARN":
-            hash_color = Color.YELLOW
         elif h == "SKIP":
             hash_color = Color.DIM
         else:
@@ -360,7 +336,7 @@ def print_summary(results: list[CellResult]) -> None:
     total = len(results)
     passed = sum(
         1 for r in results
-        if r.src_status == 200 and not r.src_error and r.hash_status in ("URL", "PRESENT", "SKIP")
+        if r.src_status == 200 and not r.src_error and r.hash_status in ("PRESENT", "SKIP")
     )
     failed = total - passed
     skipped = sum(1 for r in results if r.hash_status == "SKIP")
@@ -473,7 +449,7 @@ def main() -> None:
             for ver in versions:
                 d = resolve_distro_get(filepath, ver, arch)
                 src_status, src_size, src_error = head_request(d.get("src", ""))
-                hash_status, hash_display = check_hash_val(d.get("hash_val", ""))
+                hash_status = check_hash_val(d.get("hash_val", ""))
                 results.append(CellResult(
                     file=row.file,
                     arch=arch,
@@ -482,7 +458,6 @@ def main() -> None:
                     src_status=src_status,
                     src_size=src_size,
                     src_error=src_error,
-                    hash_val=hash_display,
                     hash_status=hash_status,
                     hash_cmd=d.get("hash_cmd", ""),
                 ))
