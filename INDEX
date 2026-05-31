@@ -1,102 +1,65 @@
 {
-  "version": "v3.2",
+  "version": "v3.3",
   "entries": [
     {
-      "name": "alpine",
-      "path": "distros/alpine.sh",
+      "name": "alpine.bbe502c",
       "desc": "Alpine Linux",
-      "archs": [
-        "aarch64",
-        "x86_64"
-      ],
-      "versions": [
-        "latest-stable"
-      ],
-      "mirrors": [
-        "https://mirrors.tuna.tsinghua.edu.cn/alpine/",
-        "https://mirrors.aliyun.com/alpine/",
-        "https://mirror.xtom.com.hk/alpine/",
-        "https://dl-cdn.alpinelinux.org/alpine/"
-      ],
-      "hash": "f415464653579e8e48e31aa778d1c65c0354aa71c810c1e48fee66af7a740997"
+      "exec": {
+        "file": "distros/alpine.sh",
+        "options": {
+          "archs": ["aarch64", "x86_64"],
+          "versions": ["latest-stable"],
+          "mirrors": ["https://mirrors.tuna.tsinghua.edu.cn/alpine/", "https://mirrors.aliyun.com/alpine/", "https://mirror.xtom.com.hk/alpine/", "https://dl-cdn.alpinelinux.org/alpine/"]
+        }
+      }
     },
     {
-      "name": "archlinux-arm",
-      "path": "distros/archlinux-arm.sh",
-      "desc": "ArchLinux ARM (os.archlinuxarm.org)",
-      "archs": [
-        "aarch64"
-      ],
-      "versions": [
-        "latest"
-      ],
-      "mirrors": [
-        "http://os.archlinuxarm.org/os/"
-      ],
-      "hash": "88d50a894c6390d4b815127f82ee2c9368636e2427c8fee6ce39424939f26025"
+      "name": "archlinux-arm.121ed69",
+      "desc": "ArchLinux ARM",
+      "exec": {
+        "file": "distros/archlinux-arm.sh",
+        "options": {
+          "archs": ["aarch64"],
+          "versions": ["latest"],
+          "mirrors": ["http://os.archlinuxarm.org/os/"]
+        }
+      }
     },
     {
-      "name": "archlinux",
-      "path": "distros/archlinux.sh",
+      "name": "archlinux.fd6c308",
       "desc": "ArchLinux",
-      "archs": [
-        "x86_64"
-      ],
-      "versions": [
-        "latest",
-        "2026.05.01",
-        "2026.04.01",
-        "2026.03.01"
-      ],
-      "mirrors": [
-        "https://mirrors.tuna.tsinghua.edu.cn/archlinux/iso/",
-        "https://mirrors.aliyun.com/archlinux/iso/",
-        "https://mirrors.ustc.edu.cn/archlinux/iso/"
-      ],
-      "hash": "dd67ea7ad57de9db2e381ddc1aa77e747193615c5b27a8bea26a92b3187b8188"
+      "exec": {
+        "file": "distros/archlinux.sh",
+        "options": {
+          "archs": ["x86_64"],
+          "versions": ["latest", "2026.05.01", "2026.04.01", "2026.03.01"],
+          "mirrors": ["https://mirrors.tuna.tsinghua.edu.cn/archlinux/iso/", "https://mirrors.aliyun.com/archlinux/iso/", "https://mirrors.ustc.edu.cn/archlinux/iso/"]
+        }
+      }
     },
     {
-      "name": "kali-nethunter",
-      "path": "distros/kali-nethunter.sh",
+      "name": "kali-nethunter.48142b9",
       "desc": "Kali NetHunter",
-      "archs": [
-        "aarch64"
-      ],
-      "versions": [
-        "nano",
-        "minimal",
-        "full"
-      ],
-      "mirrors": [
-        "https://kali.download/"
-      ],
-      "hash": "db60451c1bf837c1bc195643111d6d7104787ff281305d4d5e051c6da0533cfd"
+      "exec": {
+        "file": "distros/kali-nethunter.sh",
+        "options": {
+          "archs": ["aarch64"],
+          "versions": ["nano", "minimal", "full"],
+          "mirrors": ["https://kali.download/"]
+        }
+      }
     },
     {
-      "name": "ubuntu",
-      "path": "distros/ubuntu.sh",
+      "name": "ubuntu.3c36ebf",
       "desc": "Ubuntu Base",
-      "archs": [
-        "aarch64",
-        "x86_64"
-      ],
-      "versions": [
-        "26.04",
-        "25.10",
-        "24.04",
-        "22.04",
-        "20.04",
-        "18.04",
-        "16.04",
-        "14.04"
-      ],
-      "mirrors": [
-        "https://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/",
-        "https://mirrors.aliyun.com/ubuntu-cdimage/",
-        "https://mirrors.ustc.edu.cn/ubuntu-cdimage/",
-        "https://cdimage.ubuntu.com/"
-      ],
-      "hash": "6e807c596a56e835eb6a64e5b5a531dfddac8d2d3a8dbcaa21f352514459faf6"
+      "exec": {
+        "file": "distros/ubuntu.sh",
+        "options": {
+          "archs": ["aarch64", "x86_64"],
+          "versions": ["26.04", "25.10", "24.04", "22.04", "20.04", "18.04", "16.04", "14.04"],
+          "mirrors": ["https://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/", "https://mirrors.aliyun.com/ubuntu-cdimage/", "https://mirrors.ustc.edu.cn/ubuntu-cdimage/", "https://cdimage.ubuntu.com/"]
+        }
+      }
     }
   ]
 }

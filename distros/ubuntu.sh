@@ -5,10 +5,9 @@
 set -euo pipefail
 shopt -s inherit_errexit 2> /dev/null || true
 
-info() {
+options() {
     cat << 'EOF'
 {
-  "desc": "Ubuntu Base",
   "archs": ["aarch64", "x86_64"],
   "versions": ["26.04", "25.10", "24.04", "22.04", "20.04", "18.04", "16.04", "14.04"],
   "mirrors": [
@@ -17,6 +16,15 @@ info() {
     "https://mirrors.ustc.edu.cn/ubuntu-cdimage/",
     "https://cdimage.ubuntu.com/"
   ]
+}
+EOF
+}
+
+info() {
+    cat << 'EOF'
+{
+  "name": "ubuntu",
+  "desc": "Ubuntu Base"
 }
 EOF
 }
@@ -62,12 +70,15 @@ EOF
 }
 
 usage() {
-    echo "usage: $0 {info | get <version> <arch> [mirror] }" >&2
+    echo "usage: $0 {options | info | get <version> <arch> [mirror] }" >&2
     exit 1
 }
 
 main() {
     case "${1:-}" in
+        options)
+            options
+            ;;
         info)
             info
             ;;
