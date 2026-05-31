@@ -1,5 +1,5 @@
 {
-  "version": "v3.1",
+  "version": "v3.2",
   "entries": [
     {
       "name": "alpine",
@@ -18,7 +18,7 @@
         "https://mirror.xtom.com.hk/alpine/",
         "https://dl-cdn.alpinelinux.org/alpine/"
       ],
-      "hash": "6d5aac175b161fe858fbcf12ab5dbc3a579b2c6f10d7a8405e5988193386d8eb"
+      "hash": "f415464653579e8e48e31aa778d1c65c0354aa71c810c1e48fee66af7a740997"
     },
     {
       "name": "archlinux-arm",
@@ -33,7 +33,7 @@
       "mirrors": [
         "http://os.archlinuxarm.org/os/"
       ],
-      "hash": "fae6791ffad251a2da19c033fa9d3e435d3be67207f76bdab950f7af05c3e9d9"
+      "hash": "88d50a894c6390d4b815127f82ee2c9368636e2427c8fee6ce39424939f26025"
     },
     {
       "name": "archlinux",
@@ -53,7 +53,7 @@
         "https://mirrors.aliyun.com/archlinux/iso/",
         "https://mirrors.ustc.edu.cn/archlinux/iso/"
       ],
-      "hash": "6c0d7a2ebddeef745fd43009bed23b3841d92eba5051dfa885ff4bde9bcb94d7"
+      "hash": "dd67ea7ad57de9db2e381ddc1aa77e747193615c5b27a8bea26a92b3187b8188"
     },
     {
       "name": "kali-nethunter",
@@ -70,7 +70,7 @@
       "mirrors": [
         "https://kali.download/"
       ],
-      "hash": "85009d69c2d3514bc1391dc7ffa447e9c33c6e738cdd0da027c50df73aefb1be"
+      "hash": "db60451c1bf837c1bc195643111d6d7104787ff281305d4d5e051c6da0533cfd"
     },
     {
       "name": "ubuntu",
@@ -96,7 +96,7 @@
         "https://mirrors.ustc.edu.cn/ubuntu-cdimage/",
         "https://cdimage.ubuntu.com/"
       ],
-      "hash": "9e04111f4236fbc9629d3dc9e540c4ac817a070c13a46bd765f531a28cbbe87c"
+      "hash": "6e807c596a56e835eb6a64e5b5a531dfddac8d2d3a8dbcaa21f352514459faf6"
     }
   ]
 }

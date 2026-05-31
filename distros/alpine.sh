@@ -43,8 +43,7 @@ get() {
     cat << EOF
 {
   "src": "${src}",
-  "hash_val": "${hash_val}",
-  "hash_cmd": "sha256sum"
+  "hash_val": "sha256:${hash_val}"
 }
 EOF
 }

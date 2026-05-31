@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate SRC URLs, HASH_VAL, and HASH_CMD for distro definitions."""
+"""Validate SRC URLs and HASH_VAL for distro definitions."""
 
 import argparse
 import hashlib
@@ -16,9 +16,23 @@ from typing import NamedTuple
 
 # === Constants ===
 
-EXPECTED_VERSION = "v3.1"
+EXPECTED_VERSION = "v3.2"
 SCRIPT_DIR = Path(__file__).resolve().parent
 BUILD_INDEX = SCRIPT_DIR / "build_INDEX.py"
+
+KNOWN_HASHES = {
+    "md5": 32,
+    "sha1": 40,
+    "sha256": 64,
+    "sha384": 96,
+    "sha512": 128,
+    "sha3-256": 64,
+    "sha3-384": 96,
+    "sha3-512": 128,
+    "b2": 128,
+    "blake2b": 128,
+    "blake2s": 64,
+}
 
 
 class Color:
@@ -43,6 +57,11 @@ class DistroRow(NamedTuple):
     desc: str
 
 
+class HashResult(NamedTuple):
+    status: str
+    display: str
+
+
 class CellResult(NamedTuple):
     file: str
     arch: str
@@ -52,7 +71,7 @@ class CellResult(NamedTuple):
     src_size: int
     src_error: str
     hash_status: str
-    hash_cmd: str
+    hash_display: str
 
 
 # === Utilities ===
@@ -243,23 +262,33 @@ def head_request(url: str, timeout: int = 15) -> tuple[int, int, str]:
         return 0, 0, str(e)
 
 
-def check_hash_val(hash_val: str) -> str:
+def check_hash_val(hash_val: str) -> HashResult:
     if not hash_val:
-        return "FAIL"
+        return HashResult("FAIL", "FAIL")
     if hash_val == "SKIP":
-        return "SKIP"
-    return "PRESENT"
+        return HashResult("SKIP", "SKIP")
+    if ":" not in hash_val:
+        return HashResult("FAIL", "FAIL")
+
+    algo, hex_val = hash_val.split(":", 1)
+
+    if not algo or not hex_val:
+        return HashResult("FAIL", "FAIL")
+
+    hex_chars = set("0123456789abcdefABCDEF")
+    if not all(c in hex_chars for c in hex_val):
+        return HashResult("FAIL", "FAIL")
+
+    algo = algo.lower()
+    expected_len = KNOWN_HASHES.get(algo)
+    if expected_len is None:
+        return HashResult("PASS", f"{algo}(?)")
+    if len(hex_val) != expected_len:
+        return HashResult("FAIL", f"{algo}(len!)")
+    return HashResult("PASS", algo)
 
 
 # === Report ===
-
-
-def _merge_hash_columns(hash_status: str, hash_cmd: str) -> str:
-    if hash_status == "SKIP":
-        return "SKIP"
-    if hash_status == "FAIL":
-        return "FAIL"
-    return hash_cmd.replace("sum", "") if hash_cmd else "?"
 
 
 def build_report_table(results: list[CellResult]) -> str:
@@ -279,7 +308,7 @@ def build_report_table(results: list[CellResult]) -> str:
         else:
             src_display = f"{r.src_status or 'ERR'} {r.src_error or '-'}"
 
-        hash_display = _merge_hash_columns(r.hash_status, r.hash_cmd)
+        hash_display = r.hash_display
 
         rows.append({
             "file": r.file,
@@ -336,7 +365,7 @@ def print_summary(results: list[CellResult]) -> None:
     total = len(results)
     passed = sum(
         1 for r in results
-        if r.src_status == 200 and not r.src_error and r.hash_status in ("PRESENT", "SKIP")
+        if r.src_status == 200 and not r.src_error and r.hash_status in ("PASS", "SKIP")
     )
     failed = total - passed
     skipped = sum(1 for r in results if r.hash_status == "SKIP")
@@ -363,7 +392,7 @@ def print_summary(results: list[CellResult]) -> None:
 def build_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="validate.py",
-        description=f"验证发行版定义的 SRC、HASH_VAL、HASH_CMD 有效性\n版本: {EXPECTED_VERSION}",
+        description=f"验证发行版定义的 SRC、HASH_VAL 有效性\n版本: {EXPECTED_VERSION}",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="示例:\n  %(prog)s\n  %(prog)s --path distros/ubuntu.sh\n  %(prog)s --arch-limit 3 --version-limit 2",
     )
@@ -449,7 +478,7 @@ def main() -> None:
             for ver in versions:
                 d = resolve_distro_get(filepath, ver, arch)
                 src_status, src_size, src_error = head_request(d.get("src", ""))
-                hash_status = check_hash_val(d.get("hash_val", ""))
+                hash_result = check_hash_val(d.get("hash_val", ""))
                 results.append(CellResult(
                     file=row.file,
                     arch=arch,
@@ -458,8 +487,8 @@ def main() -> None:
                     src_status=src_status,
                     src_size=src_size,
                     src_error=src_error,
-                    hash_status=hash_status,
-                    hash_cmd=d.get("hash_cmd", ""),
+                    hash_status=hash_result.status,
+                    hash_display=hash_result.display,
                 ))
 
     print()
