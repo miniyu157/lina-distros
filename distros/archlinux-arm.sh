@@ -5,15 +5,23 @@
 set -euo pipefail
 shopt -s inherit_errexit 2> /dev/null || true
 
-info() {
+options() {
     cat << 'EOF'
 {
-  "desc": "ArchLinux ARM (os.archlinuxarm.org)",
   "archs": ["aarch64"],
   "versions": ["latest"],
   "mirrors": [
     "http://os.archlinuxarm.org/os/"
   ]
+}
+EOF
+}
+
+info() {
+    cat << 'EOF'
+{
+  "name": "archlinux-arm",
+  "desc": "ArchLinux ARM"
 }
 EOF
 }
@@ -41,12 +49,15 @@ EOF
 }
 
 usage() {
-    echo "usage: $0 {info | get <version> <arch> [mirror] }" >&2
+    echo "usage: $0 {options | info | get <version> <arch> [mirror] }" >&2
     exit 1
 }
 
 main() {
     case "${1:-}" in
+        options)
+            options
+            ;;
         info)
             info
             ;;

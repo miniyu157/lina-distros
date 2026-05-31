@@ -2,7 +2,6 @@
 """Validate SRC URLs and HASH_VAL for distro definitions."""
 
 import argparse
-import hashlib
 import json
 import math
 import signal
@@ -16,7 +15,8 @@ from typing import NamedTuple
 
 # === Constants ===
 
-EXPECTED_VERSION = "v3.2"
+EXPECTED_VERSION = "v3.3"
+DISTROS_DIR = "distros"
 SCRIPT_DIR = Path(__file__).resolve().parent
 BUILD_INDEX = SCRIPT_DIR / "build_INDEX.py"
 
@@ -49,12 +49,11 @@ class Color:
 
 
 class DistroRow(NamedTuple):
-    hash: str
-    file: str
     name: str
+    desc: str
+    file: str
     archs: list[str]
     versions: list[str]
-    desc: str
 
 
 class HashResult(NamedTuple):
@@ -109,7 +108,7 @@ def truncate(s: str, max_len: int) -> str:
         return s
     if max_len <= 3:
         return s[:max_len]
-    return s[:max_len - 3] + "..."
+    return s[: max_len - 3] + "..."
 
 
 def format_size(n: int) -> str:
@@ -167,7 +166,9 @@ def check_version(build_index: Path) -> tuple[bool, str]:
     try:
         r = subprocess.run(
             [sys.executable, str(build_index), "--version"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         actual = r.stdout.strip()
         return actual == EXPECTED_VERSION, actual
@@ -178,8 +179,10 @@ def check_version(build_index: Path) -> tuple[bool, str]:
 def parse_index(build_index: Path) -> list[DistroRow]:
     try:
         r = subprocess.run(
-            [sys.executable, str(build_index)],
-            capture_output=True, text=True, timeout=30,
+            [sys.executable, str(build_index), DISTROS_DIR],
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
     except (subprocess.TimeoutExpired, OSError) as e:
         print(f"{Color.RED}build_INDEX.py failed: {e}{Color.RESET}")
@@ -205,38 +208,28 @@ def parse_index(build_index: Path) -> list[DistroRow]:
 
     rows = []
     for entry in data.get("entries", []):
-        rows.append(DistroRow(
-            hash=entry.get("hash", ""),
-            file=entry.get("path", ""),
-            name=entry.get("name", ""),
-            archs=entry.get("archs", []),
-            versions=entry.get("versions", []),
-            desc=entry.get("desc", ""),
-        ))
+        exec_data = entry.get("exec", {})
+        exec_options = exec_data.get("options", {})
+        rows.append(
+            DistroRow(
+                name=entry.get("name", ""),
+                desc=entry.get("desc", ""),
+                file=exec_data.get("file", ""),
+                archs=exec_options.get("archs", []),
+                versions=exec_options.get("versions", []),
+            )
+        )
     return rows
 
-
-def validate_row_hashes(rows: list[DistroRow]) -> tuple[list[DistroRow], list[str]]:
-    warnings: list[str] = []
-    for row in rows:
-        filepath = SCRIPT_DIR / row.file
-        if not filepath.is_file():
-            warnings.append(f"[{row.file}] file not found, cannot verify hash")
-            continue
-        computed = hashlib.sha256(filepath.read_bytes()).hexdigest()
-        if computed != row.hash:
-            warnings.append(
-                f"[{row.file}] hash mismatch: "
-                f"computed={computed}, in-index={row.hash}"
-            )
-    return rows, warnings
 
 
 def resolve_distro_get(filepath: Path, version: str, arch: str) -> dict[str, str]:
     try:
         r = subprocess.run(
             ["bash", str(filepath), "get", version, arch],
-            capture_output=True, text=True, timeout=60,
+            capture_output=True,
+            text=True,
+            timeout=60,
         )
         if r.returncode != 0:
             return {}
@@ -310,13 +303,15 @@ def build_report_table(results: list[CellResult]) -> str:
 
         hash_display = r.hash_display
 
-        rows.append({
-            "file": r.file,
-            "arch": r.arch,
-            "version": r.version,
-            "src": src_display,
-            "hash": hash_display,
-        })
+        rows.append(
+            {
+                "file": r.file,
+                "arch": r.arch,
+                "version": r.version,
+                "src": src_display,
+                "hash": hash_display,
+            }
+        )
         for k in max_w:
             max_w[k] = max(max_w[k], len(rows[-1][k]))
 
@@ -363,10 +358,7 @@ def build_report_table(results: list[CellResult]) -> str:
 
 def print_summary(results: list[CellResult]) -> None:
     total = len(results)
-    passed = sum(
-        1 for r in results
-        if r.src_status == 200 and not r.src_error and r.hash_status in ("PASS", "SKIP")
-    )
+    passed = sum(1 for r in results if r.src_status == 200 and not r.src_error and r.hash_status in ("PASS", "SKIP"))
     failed = total - passed
     skipped = sum(1 for r in results if r.hash_status == "SKIP")
 
@@ -397,23 +389,36 @@ def build_argparser() -> argparse.ArgumentParser:
         epilog="示例:\n  %(prog)s\n  %(prog)s --path distros/ubuntu.sh\n  %(prog)s --arch-limit 3 --version-limit 2",
     )
     parser.add_argument(
-        "--arch-limit", type=int, default=5, metavar="N",
+        "--arch-limit",
+        type=int,
+        default=5,
+        metavar="N",
         help="每个发行版的架构抽样上限（默认: 5）",
     )
     parser.add_argument(
-        "--version-limit", type=int, default=4, metavar="N",
+        "--version-limit",
+        type=int,
+        default=4,
+        metavar="N",
         help="每个发行版的版本抽样上限，取最新与最老各一半（默认: 4）",
     )
     parser.add_argument(
-        "--path", type=str, default=None, metavar="PATH",
+        "--path",
+        type=str,
+        default=None,
+        metavar="PATH",
         help="按文件路径筛选发行版定义（如 distros/alpine.sh），支持 ./ 与绝对路径自动解析",
     )
     parser.add_argument(
-        "--build-index", type=Path, default=None, metavar="PATH",
+        "--build-index",
+        type=Path,
+        default=None,
+        metavar="PATH",
         help="指定自定义 INDEX 生成脚本路径（默认: build_INDEX.py）",
     )
     parser.add_argument(
-        "--version", action="version",
+        "--version",
+        action="version",
         version=f"%(prog)s {EXPECTED_VERSION}",
     )
     return parser
@@ -439,10 +444,6 @@ def main() -> None:
         sys.exit(1)
 
     distro_rows = parse_index(build_index)
-
-    distro_rows, hash_warnings = validate_row_hashes(distro_rows)
-    for w in hash_warnings:
-        print(f"{Color.YELLOW}警告: {w}{Color.RESET}", file=sys.stderr)
 
     if args.path:
         matched = resolve_path(args.path, [r.file for r in distro_rows])
@@ -479,17 +480,19 @@ def main() -> None:
                 d = resolve_distro_get(filepath, ver, arch)
                 src_status, src_size, src_error = head_request(d.get("src", ""))
                 hash_result = check_hash_val(d.get("hash_val", ""))
-                results.append(CellResult(
-                    file=row.file,
-                    arch=arch,
-                    version=ver,
-                    src=d.get("src", ""),
-                    src_status=src_status,
-                    src_size=src_size,
-                    src_error=src_error,
-                    hash_status=hash_result.status,
-                    hash_display=hash_result.display,
-                ))
+                results.append(
+                    CellResult(
+                        file=row.file,
+                        arch=arch,
+                        version=ver,
+                        src=d.get("src", ""),
+                        src_status=src_status,
+                        src_size=src_size,
+                        src_error=src_error,
+                        hash_status=hash_result.status,
+                        hash_display=hash_result.display,
+                    )
+                )
 
     print()
     print(build_report_table(results))

@@ -5,10 +5,9 @@
 set -euo pipefail
 shopt -s inherit_errexit 2> /dev/null || true
 
-info() {
+options() {
     cat << 'EOF'
 {
-  "desc": "ArchLinux",
   "archs": ["x86_64"],
   "versions": ["latest", "2026.05.01", "2026.04.01", "2026.03.01"],
   "mirrors": [
@@ -16,6 +15,15 @@ info() {
     "https://mirrors.aliyun.com/archlinux/iso/",
     "https://mirrors.ustc.edu.cn/archlinux/iso/"
   ]
+}
+EOF
+}
+
+info() {
+    cat << 'EOF'
+{
+  "name": "archlinux",
+  "desc": "ArchLinux"
 }
 EOF
 }
@@ -53,12 +61,15 @@ EOF
 }
 
 usage() {
-    echo "usage: $0 {info | get <version> <arch> [mirror] }" >&2
+    echo "usage: $0 {options | info | get <version> <arch> [mirror] }" >&2
     exit 1
 }
 
 main() {
     case "${1:-}" in
+        options)
+            options
+            ;;
         info)
             info
             ;;
