@@ -35,8 +35,7 @@ get() {
     cat << EOF
 {
   "src": "${src}",
-  "hash_val": "${hash_val}",
-  "hash_cmd": "md5sum"
+  "hash_val": "md5:${hash_val}"
 }
 EOF
 }
