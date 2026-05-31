@@ -10,7 +10,7 @@ info() {
 {
   "desc": "Ubuntu Base",
   "archs": ["aarch64", "x86_64"],
-  "versions": ["14.04", "16.04", "18.04", "20.04", "22.04", "24.04", "25.10", "26.04"],
+  "versions": ["26.04", "25.10", "24.04", "22.04", "20.04", "18.04", "16.04", "14.04"],
   "mirrors": [
     "https://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/",
     "https://mirrors.aliyun.com/ubuntu-cdimage/",
