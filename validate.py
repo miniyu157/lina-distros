@@ -15,7 +15,7 @@ from typing import NamedTuple
 
 # === Constants ===
 
-EXPECTED_VERSION = "v3.3"
+EXPECTED_VERSION = "v1"
 DISTROS_DIR = "distros"
 SCRIPT_DIR = Path(__file__).resolve().parent
 BUILD_INDEX = SCRIPT_DIR / "build_INDEX.py"
