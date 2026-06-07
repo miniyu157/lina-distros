@@ -48,9 +48,8 @@ EOF
 }
 
 get() {
-    local default_mirror='https://mirrors.kernel.org/archlinux/iso/'
-    local version="${1}" arch="${2}" mirror="${3:-$default_mirror}"
-    [[ -z $version || -z $arch ]] && usage
+    local version="${1}" arch="${2}" mirror="${3}"
+    [[ -z $version || -z $arch || -z $mirror ]] && usage
 
     local hashes_url="${mirror}${version}/sha256sums.txt"
     local hash_val filename
@@ -75,7 +74,7 @@ EOF
 }
 
 usage() {
-    echo "usage: $0 {options | info | get <version> <arch> [mirror] }" >&2
+    echo "usage: $0 {options | info | get <version> <arch> <mirror> }" >&2
     exit 1
 }
 

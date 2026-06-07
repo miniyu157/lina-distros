@@ -11,10 +11,10 @@ options() {
   "archs": ["aarch64", "armhf", "armv7", "loongarch64", "ppc64le", "riscv64", "s390x", "x86", "x86_64"],
   "versions": ["latest-stable"],
   "mirrors": [
+    "https://dl-cdn.alpinelinux.org/alpine/",
     "https://mirrors.tuna.tsinghua.edu.cn/alpine/",
     "https://mirrors.aliyun.com/alpine/",
-    "https://mirror.xtom.com.hk/alpine/",
-    "https://dl-cdn.alpinelinux.org/alpine/"
+    "https://mirror.xtom.com.hk/alpine/"
   ]
 }
 EOF
@@ -30,9 +30,8 @@ EOF
 }
 
 get() {
-    local default_mirror='https://dl-cdn.alpinelinux.org/alpine/'
-    local version="${1}" arch="${2}" mirror="${3:-$default_mirror}"
-    [[ -z $version || -z $arch ]] && usage
+    local version="${1}" arch="${2}" mirror="${3}"
+    [[ -z $version || -z $arch || -z $mirror ]] && usage
 
     local yaml_url="${mirror}${version}/releases/${arch}/latest-releases.yaml"
     local yaml_text
@@ -57,7 +56,7 @@ EOF
 }
 
 usage() {
-    echo "usage: $0 {options | info | get <version> <arch> [mirror] }" >&2
+    echo "usage: $0 {options | info | get <version> <arch> <mirror> }" >&2
     exit 1
 }
 

@@ -27,9 +27,8 @@ EOF
 }
 
 get() {
-    local default_mirror='http://os.archlinuxarm.org/os/'
-    local version="${1}" arch="${2}" mirror="${3:-$default_mirror}"
-    [[ -z $version || -z $arch ]] && usage
+    local version="${1}" arch="${2}" mirror="${3}"
+    [[ -z $version || -z $arch || -z $mirror ]] && usage
 
     local src="${mirror}ArchLinuxARM-aarch64-latest.tar.gz"
     local md5_url="${mirror}ArchLinuxARM-aarch64-latest.tar.gz.md5"
@@ -49,7 +48,7 @@ EOF
 }
 
 usage() {
-    echo "usage: $0 {options | info | get <version> <arch> [mirror] }" >&2
+    echo "usage: $0 {options | info | get <version> <arch> <mirror> }" >&2
     exit 1
 }
 
