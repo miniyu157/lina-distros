@@ -38,6 +38,30 @@
       }
     },
     {
+      "name": "debian.622b896",
+      "desc": "Debian GNU/Linux",
+      "exec": {
+        "file": "distros/debian.sh",
+        "options": {
+          "archs": ["x86_64", "aarch64", "armhf"],
+          "versions": ["bookworm", "bullseye", "trixie", "forky"],
+          "mirrors": ["http://images.linuxcontainers.org"]
+        }
+      }
+    },
+    {
+      "name": "fedora.ce82242",
+      "desc": "Fedora Linux",
+      "exec": {
+        "file": "distros/fedora.sh",
+        "options": {
+          "archs": ["x86_64", "aarch64"],
+          "versions": ["44", "43", "42", "41", "40", "39", "38", "37", "36", "35", "34", "33", "32", "31", "30"],
+          "mirrors": ["https://dl.fedoraproject.org/pub/fedora", "https://mirrors.tuna.tsinghua.edu.cn/fedora", "https://mirrors.ustc.edu.cn/fedora", "https://mirrors.aliyun.com/fedora"]
+        }
+      }
+    },
+    {
       "name": "kali-nethunter.0d8d3a5",
       "desc": "Kali NetHunter",
       "exec": {
@@ -50,7 +74,19 @@
       }
     },
     {
-      "name": "ubuntu.1fe1bc3",
+      "name": "rocky.5ee395d",
+      "desc": "Rocky Linux",
+      "exec": {
+        "file": "distros/rocky.sh",
+        "options": {
+          "archs": ["x86_64", "aarch64", "ppc64le", "s390x"],
+          "versions": ["8", "9", "10"],
+          "mirrors": ["https://dl.rockylinux.org/pub/rocky", "https://mirrors.ustc.edu.cn/rocky", "https://mirrors.aliyun.com/rockylinux"]
+        }
+      }
+    },
+    {
+      "name": "ubuntu.57da55d",
       "desc": "Ubuntu Base",
       "exec": {
         "file": "distros/ubuntu.sh",
