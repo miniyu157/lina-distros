@@ -26,14 +26,14 @@
       }
     },
     {
-      "name": "archlinux.fd6c308",
+      "name": "archlinux.fdf02e3",
       "desc": "ArchLinux",
       "exec": {
         "file": "distros/archlinux.sh",
         "options": {
           "archs": ["x86_64"],
-          "versions": ["latest", "2026.05.01", "2026.04.01", "2026.03.01"],
-          "mirrors": ["https://mirrors.tuna.tsinghua.edu.cn/archlinux/iso/", "https://mirrors.aliyun.com/archlinux/iso/", "https://mirrors.ustc.edu.cn/archlinux/iso/"]
+          "versions": ["latest", "2026.06.01", "2026.05.01", "2026.04.01"],
+          "mirrors": ["https://mirrors.kernel.org/archlinux/iso/", "https://mirrors.tuna.tsinghua.edu.cn/archlinux/iso/", "https://mirrors.aliyun.com/archlinux/iso/", "https://mirrors.ustc.edu.cn/archlinux/iso/"]
         }
       }
     },
