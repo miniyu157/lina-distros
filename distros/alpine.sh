@@ -8,7 +8,7 @@ shopt -s inherit_errexit 2> /dev/null || true
 options() {
     cat << 'EOF'
 {
-  "archs": ["aarch64", "x86_64"],
+  "archs": ["aarch64", "armhf", "armv7", "loongarch64", "ppc64le", "riscv64", "s390x", "x86", "x86_64"],
   "versions": ["latest-stable"],
   "mirrors": [
     "https://mirrors.tuna.tsinghua.edu.cn/alpine/",

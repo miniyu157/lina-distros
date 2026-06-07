@@ -52,11 +52,6 @@ get() {
     local version="${1}" arch="${2}" mirror="${3:-$default_mirror}"
     [[ -z $version || -z $arch ]] && usage
 
-    [[ $arch != "x86_64" ]] && {
-        printf "Error: Arch Linux only supports x86_64 architecture.\n" >&2
-        return 1
-    }
-
     local hashes_url="${mirror}${version}/sha256sums.txt"
     local hash_val filename
 
