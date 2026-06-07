@@ -2,12 +2,12 @@
   "version": "v1",
   "entries": [
     {
-      "name": "alpine.bbe502c",
+      "name": "alpine.13488f1",
       "desc": "Alpine Linux",
       "exec": {
         "file": "distros/alpine.sh",
         "options": {
-          "archs": ["aarch64", "x86_64"],
+          "archs": ["aarch64", "armhf", "armv7", "loongarch64", "ppc64le", "riscv64", "s390x", "x86", "x86_64"],
           "versions": ["latest-stable"],
           "mirrors": ["https://mirrors.tuna.tsinghua.edu.cn/alpine/", "https://mirrors.aliyun.com/alpine/", "https://mirror.xtom.com.hk/alpine/", "https://dl-cdn.alpinelinux.org/alpine/"]
         }
@@ -26,7 +26,7 @@
       }
     },
     {
-      "name": "archlinux.fdf02e3",
+      "name": "archlinux.74033db",
       "desc": "ArchLinux",
       "exec": {
         "file": "distros/archlinux.sh",
