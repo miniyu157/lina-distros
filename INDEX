@@ -1,20 +1,20 @@
 {
-  "version": "v1",
+  "version": "v2",
   "entries": [
     {
-      "name": "alpine.13488f1",
+      "name": "alpine.72d2bbe",
       "desc": "Alpine Linux",
       "exec": {
         "file": "distros/alpine.sh",
         "options": {
           "archs": ["aarch64", "armhf", "armv7", "loongarch64", "ppc64le", "riscv64", "s390x", "x86", "x86_64"],
           "versions": ["latest-stable"],
-          "mirrors": ["https://mirrors.tuna.tsinghua.edu.cn/alpine/", "https://mirrors.aliyun.com/alpine/", "https://mirror.xtom.com.hk/alpine/", "https://dl-cdn.alpinelinux.org/alpine/"]
+          "mirrors": ["https://dl-cdn.alpinelinux.org/alpine/", "https://mirrors.tuna.tsinghua.edu.cn/alpine/", "https://mirrors.aliyun.com/alpine/", "https://mirror.xtom.com.hk/alpine/"]
         }
       }
     },
     {
-      "name": "archlinux-arm.121ed69",
+      "name": "archlinux-arm.b1d3d51",
       "desc": "ArchLinux ARM",
       "exec": {
         "file": "distros/archlinux-arm.sh",
@@ -26,7 +26,7 @@
       }
     },
     {
-      "name": "archlinux.74033db",
+      "name": "archlinux.6b17e59",
       "desc": "ArchLinux",
       "exec": {
         "file": "distros/archlinux.sh",
@@ -38,7 +38,7 @@
       }
     },
     {
-      "name": "kali-nethunter.48142b9",
+      "name": "kali-nethunter.0d8d3a5",
       "desc": "Kali NetHunter",
       "exec": {
         "file": "distros/kali-nethunter.sh",
@@ -50,14 +50,14 @@
       }
     },
     {
-      "name": "ubuntu.ab0dc51",
+      "name": "ubuntu.1fe1bc3",
       "desc": "Ubuntu Base",
       "exec": {
         "file": "distros/ubuntu.sh",
         "options": {
           "archs": ["aarch64", "x86_64"],
           "versions": ["26.10_snapshot-1", "26.04", "25.10", "24.04", "22.04", "20.04", "18.04", "16.04", "14.04"],
-          "mirrors": ["https://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/", "https://mirrors.aliyun.com/ubuntu-cdimage/", "https://mirrors.ustc.edu.cn/ubuntu-cdimage/", "https://cdimage.ubuntu.com/"]
+          "mirrors": ["https://cdimage.ubuntu.com/", "https://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/", "https://mirrors.aliyun.com/ubuntu-cdimage/", "https://mirrors.ustc.edu.cn/ubuntu-cdimage/"]
         }
       }
     }
