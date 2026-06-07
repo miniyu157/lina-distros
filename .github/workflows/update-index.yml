@@ -1,0 +1,45 @@
+name: Update INDEX
+
+on:
+  push:
+    paths:
+      - 'distros/*.sh'
+      - 'build_INDEX.py'
+    branches:
+      - main
+  schedule:
+    # 每天 UTC 00:07（避开整点高峰）
+    - cron: '7 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and update INDEX
+        run: |
+          set -eu
+
+          python3 build_INDEX.py distros > INDEX.new
+
+          # 没变化就跳过，不产生空提交
+          if [ -f INDEX ] && diff -q INDEX INDEX.new > /dev/null 2>&1; then
+            echo "INDEX unchanged, nothing to commit."
+            exit 0
+          fi
+
+          # 生成有意义的提交信息：比较新旧 INDEX 的版本变化
+          COMMIT_MSG=$(python3 .github/scripts/gen-commit-msg.py)
+
+          mv INDEX.new INDEX
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add INDEX
+          git commit -m "$COMMIT_MSG"
+          git push
