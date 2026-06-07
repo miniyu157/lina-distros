@@ -15,7 +15,7 @@ from typing import NamedTuple
 
 # === Constants ===
 
-EXPECTED_VERSION = "v1"
+EXPECTED_VERSION = "v2"
 DISTROS_DIR = "distros"
 SCRIPT_DIR = Path(__file__).resolve().parent
 BUILD_INDEX = SCRIPT_DIR / "build_INDEX.py"
@@ -54,6 +54,7 @@ class DistroRow(NamedTuple):
     file: str
     archs: list[str]
     versions: list[str]
+    mirrors: list[str]
 
 
 class HashResult(NamedTuple):
@@ -217,16 +218,17 @@ def parse_index(build_index: Path) -> list[DistroRow]:
                 file=exec_data.get("file", ""),
                 archs=exec_options.get("archs", []),
                 versions=exec_options.get("versions", []),
+                mirrors=exec_options.get("mirrors", []),
             )
         )
     return rows
 
 
 
-def resolve_distro_get(filepath: Path, version: str, arch: str) -> dict[str, str]:
+def resolve_distro_get(filepath: Path, version: str, arch: str, mirror: str) -> dict[str, str]:
     try:
         r = subprocess.run(
-            ["bash", str(filepath), "get", version, arch],
+            ["bash", str(filepath), "get", version, arch, mirror],
             capture_output=True,
             text=True,
             timeout=60,
@@ -477,7 +479,7 @@ def main() -> None:
         filepath = SCRIPT_DIR / row.file
         for arch in archs:
             for ver in versions:
-                d = resolve_distro_get(filepath, ver, arch)
+                d = resolve_distro_get(filepath, ver, arch, row.mirrors[0] if row.mirrors else "")
                 src_status, src_size, src_error = head_request(d.get("src", ""))
                 hash_result = check_hash_val(d.get("hash_val", ""))
                 results.append(

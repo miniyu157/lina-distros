@@ -27,9 +27,8 @@ EOF
 }
 
 get() {
-    local default_mirror='https://kali.download/'
-    local version="${1}" arch="${2}" mirror="${3:-$default_mirror}"
-    [[ -z $version || -z $arch ]] && usage
+    local version="${1}" arch="${2}" mirror="${3}"
+    [[ -z $version || -z $arch || -z $mirror ]] && usage
 
     local tar_file="kali-nethunter-rootfs-${version}-arm64.tar.xz"
     local sum_url="${mirror}nethunter-images/current/rootfs/SHA256SUMS"
@@ -51,7 +50,7 @@ EOF
 }
 
 usage() {
-    echo "usage: $0 {options | info | get <version> <arch> [mirror] }" >&2
+    echo "usage: $0 {options | info | get <version> <arch> <mirror> }" >&2
     exit 1
 }
 

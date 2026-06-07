@@ -61,10 +61,10 @@ PYEOF
   "archs": ["aarch64", "x86_64"],
   "versions": ${versions_json},
   "mirrors": [
+    "https://cdimage.ubuntu.com/",
     "https://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/",
     "https://mirrors.aliyun.com/ubuntu-cdimage/",
-    "https://mirrors.ustc.edu.cn/ubuntu-cdimage/",
-    "https://cdimage.ubuntu.com/"
+    "https://mirrors.ustc.edu.cn/ubuntu-cdimage/"
   ]
 }
 EOF
@@ -80,9 +80,8 @@ EOF
 }
 
 get() {
-    local default_mirror='https://cdimage.ubuntu.com/'
-    local version="${1}" arch="${2}" mirror="${3:-$default_mirror}"
-    [[ -z $version || -z $arch ]] && usage
+    local version="${1}" arch="${2}" mirror="${3}"
+    [[ -z $version || -z $arch || -z $mirror ]] && usage
 
     local arch_pattern
     case "$arch" in
@@ -131,7 +130,7 @@ EOF
 }
 
 usage() {
-    echo "usage: $0 {options | info | get <version> <arch> [mirror] }" >&2
+    echo "usage: $0 {options | info | get <version> <arch> <mirror> }" >&2
     exit 1
 }
 

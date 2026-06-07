@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-VERSION = "v1"
+VERSION = "v2"
 
 
 def validate_path(path: str) -> Path:
