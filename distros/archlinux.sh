@@ -6,11 +6,30 @@ set -euo pipefail
 shopt -s inherit_errexit 2> /dev/null || true
 
 options() {
-    cat << 'EOF'
+    local versions_json
+    versions_json=$(python3 -c '
+import urllib.request, re, json, sys
+
+try:
+    url = "https://mirrors.kernel.org/archlinux/iso/"
+    with urllib.request.urlopen(url, timeout=10) as resp:
+        html = resp.read().decode("utf-8")
+    versions = re.findall(r"(\d{4}\.\d{2}\.\d{2})/\"", html)
+    versions = sorted(set(versions), reverse=True)
+    if not versions:
+        raise ValueError("no version directories found")
+    print(json.dumps(["latest"] + versions))
+except Exception:
+    default = ["latest"]
+    print(json.dumps(default), file=sys.stdout)
+')
+
+    cat << EOF
 {
   "archs": ["x86_64"],
-  "versions": ["latest", "2026.05.01", "2026.04.01", "2026.03.01"],
+  "versions": ${versions_json},
   "mirrors": [
+    "https://mirrors.kernel.org/archlinux/iso/",
     "https://mirrors.tuna.tsinghua.edu.cn/archlinux/iso/",
     "https://mirrors.aliyun.com/archlinux/iso/",
     "https://mirrors.ustc.edu.cn/archlinux/iso/"
@@ -29,7 +48,7 @@ EOF
 }
 
 get() {
-    local default_mirror='https://mirrors.tuna.tsinghua.edu.cn/archlinux/iso/'
+    local default_mirror='https://mirrors.kernel.org/archlinux/iso/'
     local version="${1}" arch="${2}" mirror="${3:-$default_mirror}"
     [[ -z $version || -z $arch ]] && usage
 
