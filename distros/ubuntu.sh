@@ -51,8 +51,7 @@ try:
 
     print(json.dumps(result))
 except Exception:
-    default = ["26.04", "25.10", "24.04", "22.04", "20.04", "18.04", "16.04", "14.04"]
-    print(json.dumps(default), file=sys.stdout)
+    print(json.dumps([]), file=sys.stdout)
 PYEOF
 )
 
