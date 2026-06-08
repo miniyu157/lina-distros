@@ -50,8 +50,9 @@ try:
             result.append(ver)
 
     print(json.dumps(result))
-except Exception:
-    print(json.dumps([]), file=sys.stdout)
+except Exception as e:
+    print(f"Error: failed to fetch Ubuntu version list: {e}", file=sys.stderr)
+    sys.exit(1)
 PYEOF
 )
 
