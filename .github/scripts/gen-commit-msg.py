@@ -4,14 +4,6 @@ import json
 import sys
 
 
-def base_name(full_name: str) -> str:
-    """Strip hash suffix: 'archlinux.fdf02e3' → 'archlinux'."""
-    parts = full_name.rsplit(".", 1)
-    if len(parts) == 2 and len(parts[1]) == 7 and all(c in "0123456789abcdef" for c in parts[1]):
-        return parts[0]
-    return full_name
-
-
 def set_diff(old_set: set[str], new_set: set[str]) -> str:
     """Format set difference: '+a, +b, -c, -d'."""
     parts: list[str] = []
@@ -35,12 +27,12 @@ def block_entry(filepath: str, old: dict | None, new: dict | None) -> str:
     lines: list[str] = [f"{filepath}"]
 
     if new is not None:
-        lines.append(f"  name:     {base_name(new['name'])}")
+        lines.append(f"  name:     {new['name']}")
     if old is not None and new is None:
-        lines.append(f"  name:     {base_name(old['name'])}")
+        lines.append(f"  name:     {old['name']}")
 
-    new_opts = new.get("exec", {}).get("options", {}) if new else {}
-    old_opts = old.get("exec", {}).get("options", {}) if old else {}
+    new_opts = new["applet"]["options"] if new else {}
+    old_opts = old["applet"]["options"] if old else {}
 
     # desc
     new_desc = new.get("desc", "") if new else ""
@@ -57,15 +49,12 @@ def block_entry(filepath: str, old: dict | None, new: dict | None) -> str:
             lines.append(diff_line)
 
     # script hash
-    old_name = old.get("name", "") if old else ""
-    new_name = new.get("name", "") if new else ""
-    if old and new and old_name != new_name:
-        _, old_hash = old_name.rsplit(".", 1) if "." in old_name else ("", old_name)
-        _, new_hash = new_name.rsplit(".", 1) if "." in new_name else ("", new_name)
+    old_hash = old["applet"]["hash"] if old else ""
+    new_hash = new["applet"]["hash"] if new else ""
+    if old and new and old_hash != new_hash:
         lines.append(f"  hash:     {old_hash} → {new_hash}")
-    elif old is None:
-        _, h = new_name.rsplit(".", 1) if "." in new_name else ("", new_name)
-        lines.append(f"  hash:     {h}")
+    elif old is None and new_hash:
+        lines.append(f"  hash:     {new_hash}")
 
     return "\n".join(lines)
 
@@ -76,8 +65,12 @@ def has_changes(old: dict, new: dict) -> bool:
         return True
     if old.get("desc") != new.get("desc"):
         return True
-    o = old.get("exec", {}).get("options", {})
-    n = new.get("exec", {}).get("options", {})
+    old_applet = old["applet"]
+    new_applet = new["applet"]
+    if old_applet["hash"] != new_applet["hash"]:
+        return True
+    o = old_applet["options"]
+    n = new_applet["options"]
     for key in ("versions", "archs", "mirrors"):
         if o.get(key) != n.get(key):
             return True
@@ -95,8 +88,8 @@ def main() -> None:
     with open("INDEX.new") as f:
         new = json.load(f)
 
-    old_map = {e["exec"]["file"]: e for e in old.get("entries", [])}
-    new_map = {e["exec"]["file"]: e for e in new.get("entries", [])}
+    old_map = {e["applet"]["file"]: e for e in old.get("entries", [])}
+    new_map = {e["applet"]["file"]: e for e in new.get("entries", [])}
 
     changed: list[str] = []   # base names for subject line
     blocks: list[str] = []    # change detail blocks
@@ -104,22 +97,30 @@ def main() -> None:
     for filepath, new_entry in new_map.items():
         old_entry = old_map.get(filepath)
         if old_entry is None:
-            changed.append(base_name(new_entry["name"]))
+            changed.append(new_entry["name"])
             blocks.append(block_entry(filepath, None, new_entry))
         elif has_changes(old_entry, new_entry):
-            changed.append(base_name(new_entry["name"]))
+            changed.append(new_entry["name"])
             blocks.append(block_entry(filepath, old_entry, new_entry))
 
     for filepath, old_entry in old_map.items():
         if filepath not in new_map:
-            changed.append(base_name(old_entry["name"]))
+            changed.append(old_entry["name"])
             blocks.append(block_entry(filepath, old_entry, None))
 
-    if not blocks:
+    old_version = old.get("version", "")
+    new_version = new.get("version", "")
+    version_tag = f" {old_version} → {new_version}" if old_version != new_version else ""
+
+    if not blocks and not version_tag:
         print("auto: update INDEX")
         return
 
-    print(f"auto: update INDEX [{', '.join(changed)}]")
+    if not blocks:
+        print(f"auto: update INDEX{version_tag}")
+        return
+
+    print(f"auto: update INDEX{version_tag} [{', '.join(changed)}]")
     print()
     print("\n\n".join(blocks))
     print()
