@@ -20,8 +20,9 @@ try:
     if not versions:
         raise ValueError("no version directories found")
     print(json.dumps(versions))
-except Exception:
-    print(json.dumps([]), file=sys.stdout)
+except Exception as e:
+    print(f"Error: failed to fetch Fedora version list: {e}", file=sys.stderr)
+    sys.exit(1)
 ')
 
     cat << EOF

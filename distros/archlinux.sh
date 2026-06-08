@@ -19,9 +19,9 @@ try:
     if not versions:
         raise ValueError("no version directories found")
     print(json.dumps(["latest"] + versions))
-except Exception:
-    default = ["latest"]
-    print(json.dumps(default), file=sys.stdout)
+except Exception as e:
+    print(f"Error: failed to fetch ArchLinux version list: {e}", file=sys.stderr)
+    sys.exit(1)
 ')
 
     cat << EOF
