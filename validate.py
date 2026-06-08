@@ -15,7 +15,7 @@ from typing import NamedTuple
 
 # === Constants ===
 
-EXPECTED_VERSION = "v2"
+EXPECTED_VERSION = "v3"
 DISTROS_DIR = "distros"
 SCRIPT_DIR = Path(__file__).resolve().parent
 BUILD_INDEX = SCRIPT_DIR / "build_INDEX.py"
@@ -209,16 +209,16 @@ def parse_index(build_index: Path) -> list[DistroRow]:
 
     rows = []
     for entry in data.get("entries", []):
-        exec_data = entry.get("exec", {})
-        exec_options = exec_data.get("options", {})
+        applet_data = entry.get("applet", {})
+        applet_options = applet_data.get("options", {})
         rows.append(
             DistroRow(
                 name=entry.get("name", ""),
                 desc=entry.get("desc", ""),
-                file=exec_data.get("file", ""),
-                archs=exec_options.get("archs", []),
-                versions=exec_options.get("versions", []),
-                mirrors=exec_options.get("mirrors", []),
+                file=applet_data.get("file", ""),
+                archs=applet_options.get("archs", []),
+                versions=applet_options.get("versions", []),
+                mirrors=applet_options.get("mirrors", []),
             )
         )
     return rows
