@@ -1,4 +1,4 @@
-# 发行版小程序接口及索引规范 V3
+# 发行版小程序接口及索引规范 V4
 
 ## 概述
 
@@ -81,21 +81,35 @@ arch: 通常不会传入 arm64、amd64 风格的参数，如果需要在 url 中
 ```json
 {
   "src": "https://dl.rockylinux.org/pub/rocky/10/images/aarch64/Rocky-10-Container-Base.latest.aarch64.tar.xz",
-  "hash_val": "sha256:995350a80651f2867e399196288d17704f13b1035fb78e4bf56ba74a2d7775d7"
+  "ext": {
+    "hash_val": "sha256:995350a80651f2867e399196288d17704f13b1035fb78e4bf56ba74a2d7775d7",
+    "find": "."
+  }
 }
 ```
 
-hash_val 可选值为 `SKIP` 字符串或 `<算法:hash字符串>`。规范中，算法被严格限定为以下枚举列表，遵循小写格式，简洁的算法名称。客户端需要编码这些算法的解析器。
+*字段说明:*
 
-```text
-sha256
-sha512
-b2
-md5
-sha1
-```
+**src** (string, 必选) — 发行版 rootfs 归档文件的下载直链。
 
-未来会根据实际需求修订规范，以扩展支持的算法。
+**ext** (object, 必选) — 扩展信息对象，客户端应当忽略不认识的字段。
+
+- `ext.hash_val` (string) — 可选值为 `SKIP` 字符串或 `<算法:hash字符串>`。算法遵循小写格式，限定于以下枚举列表，客户端需编码这些算法的解析器。
+
+  ```text
+  sha256
+  sha512
+  b2
+  md5
+  sha1
+  ```
+
+  未来会根据实际需求修订规范，以扩展支持的算法。
+
+- `ext.find` (string | number) — 指示归档中 rootfs 的位置。
+  - `"."` 或 `0` — rootfs 位于归档根目录，直接解压即可。
+  - 正整数（如 `1`, `2`, `3`）— 需要剥离相应层数的目录前缀（等效于 `tar --strip-components=N`）。
+  - 字符串（如 `"./rootfs"`, `"rootfs/"`, `"/path/to/rootfs"`）— rootfs 位于归档内该路径的子目录中。
 
 ---
 
@@ -107,7 +121,7 @@ JSON 格式的仓库索引，由编排脚本 `build_INDEX.py` 聚合所有小程
 
 ```json
 {
-  "version": "v3",
+  "version": "v4",
   "entries": [
     {
       "name": "rocky",
@@ -131,7 +145,7 @@ JSON 格式的仓库索引，由编排脚本 `build_INDEX.py` 聚合所有小程
 
 | 字段 | 类型 | 说明 |
 | ------ | ------ | ------ |
-| `version` | string | 规范版本标识，当前为 `"v3"` |
+| `version` | string | 规范版本标识，当前为 `"v4"` |
 | `entries` | array | 发行版条目列表，按文件名排序 |
 | `entries[].name` | string | 发行版简称，由小程序的 `info` 输出 |
 | `entries[].desc` | string | 发行版描述，由小程序的 `info` 输出 |

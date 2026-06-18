@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 
 # shellcheck shell=bash
+# shellcheck disable=SC2155
 
-set -euo pipefail
-shopt -s inherit_errexit 2> /dev/null || true
-
-options() {
+cmd::options() {
     local versions_json
-    versions_json=$(python3 << 'PYEOF'
+    versions_json=$(
+        python3 << 'PYEOF'
 import urllib.request, re, json, sys
 
 try:
@@ -54,7 +53,7 @@ except Exception as e:
     print(f"Error: failed to fetch Ubuntu version list: {e}", file=sys.stderr)
     sys.exit(1)
 PYEOF
-)
+    )
 
     cat << EOF
 {
@@ -70,7 +69,7 @@ PYEOF
 EOF
 }
 
-info() {
+cmd::info() {
     cat << 'EOF'
 {
   "name": "ubuntu",
@@ -79,8 +78,8 @@ info() {
 EOF
 }
 
-get() {
-    local version="${1}" arch="${2}" mirror="${3}"
+cmd::get() {
+    local version="${1:-}" arch="${2:-}" mirror="${3:-}"
     [[ -z $version || -z $arch || -z $mirror ]] && usage
 
     local arch_pattern
@@ -105,15 +104,13 @@ get() {
     fi
 
     local sum_url="${mirror}ubuntu-base/releases/${base_ver}/${subdir}/SHA256SUMS"
-    local tar_file
-    tar_file=$(curl -fsSL --connect-timeout 10 --max-time 30 "$sum_url" | grep "$arch_pattern" | awk '{print $2}' | sed 's/^\*//' | sort -V | tail -1)
+    local tar_file=$(curl -fsSL --connect-timeout 10 --max-time 30 "$sum_url" | grep "$arch_pattern" | awk '{print $2}' | sed 's/^\*//' | sort -V | tail -1)
     [[ -z $tar_file ]] && {
         printf "Error: No matching tarball found for arch=%s version=%s\n" "$arch" "$version" >&2
         return 1
     }
 
-    local hash_val
-    hash_val=$(curl -fsSL --connect-timeout 10 --max-time 30 "$sum_url" | grep "${tar_file}" | awk '{print $1}')
+    local hash_val=$(curl -fsSL --connect-timeout 10 --max-time 30 "$sum_url" | grep "${tar_file}" | awk '{print $1}')
     [[ -z $hash_val ]] && {
         printf "Error: Failed to fetch hash for %s\n" "$tar_file" >&2
         return 1
@@ -124,29 +121,38 @@ get() {
     cat << EOF
 {
   "src": "${src}",
-  "hash_val": "sha256:${hash_val}"
+  "ext": {
+    "hash_val": "sha256:${hash_val}",
+    "find": "."
+  }
 }
 EOF
 }
 
+cmd::get::usage() {
+    printf "  get <version> <arch> <mirror>\n" >&2
+}
+
+# ── Generic template: subcommand dispatch & usage display ──
 usage() {
-    echo "usage: $0 {options | info | get <version> <arch> <mirror> }" >&2
+    local cmds=$(compgen -A function cmd:: | sed -n 's/^cmd::\([^:]*\)$/\1/p' | paste -sd '|')
+    printf "usage: %s {%s}\n" "$0" "$cmds" >&2
+    local fn
+    for fn in $(compgen -A function cmd:: | sed -n '/::usage$/p'); do
+        "$fn"
+    done
     exit 1
 }
 
 main() {
-    case "${1:-}" in
-        options)
-            options
-            ;;
-        info)
-            info
-            ;;
-        get)
-            get "${2:-}" "${3:-}" "${4:-}"
-            ;;
-        *) usage ;;
-    esac
+    set -euo pipefail
+    shopt -s inherit_errexit 2> /dev/null || true
+    local fn="cmd::${1:-}"
+    if declare -f "$fn" > /dev/null 2>&1; then
+        "$fn" "${@:2}"
+    else
+        usage
+    fi
 }
 
 [[ ${BASH_SOURCE[0]} == "${0}" ]] && main "$@"

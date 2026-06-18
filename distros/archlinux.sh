@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 
 # shellcheck shell=bash
+# shellcheck disable=SC2155
 
-set -euo pipefail
-shopt -s inherit_errexit 2> /dev/null || true
-
-options() {
+cmd::options() {
     local versions_json
     versions_json=$(python3 -c '
 import urllib.request, re, json, sys
@@ -38,7 +36,7 @@ except Exception as e:
 EOF
 }
 
-info() {
+cmd::info() {
     cat << 'EOF'
 {
   "name": "archlinux",
@@ -47,50 +45,55 @@ info() {
 EOF
 }
 
-get() {
-    local version="${1}" arch="${2}" mirror="${3}"
+cmd::get() {
+    local version="${1:-}" arch="${2:-}" mirror="${3:-}"
     [[ -z $version || -z $arch || -z $mirror ]] && usage
 
     local hashes_url="${mirror}${version}/sha256sums.txt"
-    local hash_val filename
-
-    local fetch_result
-    fetch_result=$(curl -fsSL --connect-timeout 10 --max-time 30 "$hashes_url" | awk '$2 ~ /^archlinux-bootstrap-[0-9]{4}\.[0-9]{2}\.[0-9]{2}-x86_64\.tar\.zst$/ {print $1, $2}')
+    local fetch_result=$(curl -fsSL --connect-timeout 10 --max-time 30 "$hashes_url" | awk '$2 ~ /^archlinux-bootstrap-[0-9]{4}\.[0-9]{2}\.[0-9]{2}-x86_64\.tar\.zst$/ {print $1, $2}')
     [[ -z $fetch_result ]] && {
         printf "Error: Failed to fetch hash from %s\n" "$hashes_url" >&2
         return 1
     }
-
+    local hash_val filename
     read -r hash_val filename <<< "$fetch_result"
-
     local src="${mirror}${version}/${filename}"
 
     cat << EOF
 {
   "src": "${src}",
-  "hash_val": "sha256:${hash_val}"
+  "ext": {
+    "hash_val": "sha256:${hash_val}",
+    "find": "."
+  }
 }
 EOF
 }
 
+cmd::get::usage() {
+    printf "  get <version> <arch> <mirror>\n" >&2
+}
+
+# ── Generic template: subcommand dispatch & usage display ──
 usage() {
-    echo "usage: $0 {options | info | get <version> <arch> <mirror> }" >&2
+    local cmds=$(compgen -A function cmd:: | sed -n 's/^cmd::\([^:]*\)$/\1/p' | paste -sd '|')
+    printf "usage: %s {%s}\n" "$0" "$cmds" >&2
+    local fn
+    for fn in $(compgen -A function cmd:: | sed -n '/::usage$/p'); do
+        "$fn"
+    done
     exit 1
 }
 
 main() {
-    case "${1:-}" in
-        options)
-            options
-            ;;
-        info)
-            info
-            ;;
-        get)
-            get "${2:-}" "${3:-}" "${4:-}"
-            ;;
-        *) usage ;;
-    esac
+    set -euo pipefail
+    shopt -s inherit_errexit 2> /dev/null || true
+    local fn="cmd::${1:-}"
+    if declare -f "$fn" > /dev/null 2>&1; then
+        "$fn" "${@:2}"
+    else
+        usage
+    fi
 }
 
 [[ ${BASH_SOURCE[0]} == "${0}" ]] && main "$@"
