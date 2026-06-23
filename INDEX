@@ -1,12 +1,12 @@
 {
-  "version": "v4",
+  "version": "v5",
   "entries": [
     {
       "name": "alpine",
       "desc": "Alpine Linux",
       "applet": {
         "file": "distros/alpine.sh",
-        "hash": "987c805",
+        "hash": "ef486ff",
         "options": {
           "archs": ["aarch64", "armhf", "armv7", "loongarch64", "ppc64le", "riscv64", "s390x", "x86", "x86_64"],
           "versions": ["latest-stable"],
@@ -19,7 +19,7 @@
       "desc": "ArchLinux ARM",
       "applet": {
         "file": "distros/archlinux-arm.sh",
-        "hash": "4212c30",
+        "hash": "2d9ca5c",
         "options": {
           "archs": ["aarch64"],
           "versions": ["latest"],
@@ -32,7 +32,7 @@
       "desc": "ArchLinux",
       "applet": {
         "file": "distros/archlinux.sh",
-        "hash": "ae8e642",
+        "hash": "eda1136",
         "options": {
           "archs": ["x86_64"],
           "versions": ["latest", "2026.06.01", "2026.05.01", "2026.04.01"],
@@ -45,10 +45,10 @@
       "desc": "Debian GNU/Linux",
       "applet": {
         "file": "distros/debian.sh",
-        "hash": "9fcb499",
+        "hash": "49ba334",
         "options": {
           "archs": ["x86_64", "aarch64", "armhf"],
-          "versions": ["bookworm", "bullseye", "trixie", "forky"],
+          "versions": ["14", "forky", "13", "trixie", "12", "bookworm", "11", "bullseye"],
           "mirrors": ["http://images.linuxcontainers.org"]
         }
       }
@@ -58,7 +58,7 @@
       "desc": "Fedora Linux",
       "applet": {
         "file": "distros/fedora.sh",
-        "hash": "b9a23fe",
+        "hash": "5386ed6",
         "options": {
           "archs": ["x86_64", "aarch64"],
           "versions": ["44", "43", "42", "41", "40", "39", "38", "37", "36", "35", "34", "33", "32", "31", "30"],
@@ -71,7 +71,7 @@
       "desc": "Kali NetHunter",
       "applet": {
         "file": "distros/kali-nethunter.sh",
-        "hash": "8cf0d3a",
+        "hash": "6b0126c",
         "options": {
           "archs": ["aarch64"],
           "versions": ["nano", "minimal", "full"],
@@ -84,7 +84,7 @@
       "desc": "Rocky Linux",
       "applet": {
         "file": "distros/rocky.sh",
-        "hash": "e973470",
+        "hash": "80c514f",
         "options": {
           "archs": ["x86_64", "aarch64", "ppc64le", "s390x"],
           "versions": ["8", "9", "10"],
@@ -97,7 +97,7 @@
       "desc": "Ubuntu Base",
       "applet": {
         "file": "distros/ubuntu.sh",
-        "hash": "f788919",
+        "hash": "b4fc398",
         "options": {
           "archs": ["aarch64", "x86_64"],
           "versions": ["26.10_snapshot-1", "26.04", "25.10", "24.04", "22.04", "20.04", "18.04", "16.04", "14.04"],
