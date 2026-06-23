@@ -1,4 +1,4 @@
-# 发行版小程序接口及索引规范 V4
+# 发行版小程序接口及索引规范 V5
 
 ## 概述
 
@@ -81,9 +81,9 @@ arch: 通常不会传入 arm64、amd64 风格的参数，如果需要在 url 中
 ```json
 {
   "src": "https://dl.rockylinux.org/pub/rocky/10/images/aarch64/Rocky-10-Container-Base.latest.aarch64.tar.xz",
+  "type": "tarball",
   "ext": {
-    "hash_val": "sha256:995350a80651f2867e399196288d17704f13b1035fb78e4bf56ba74a2d7775d7",
-    "find": "."
+    "hash_val": "sha256:995350a80651f2867e399196288d17704f13b1035fb78e4bf56ba74a2d7775d7"
   }
 }
 ```
@@ -92,24 +92,29 @@ arch: 通常不会传入 arm64、amd64 风格的参数，如果需要在 url 中
 
 **src** (string, 必选) — 发行版 rootfs 归档文件的下载直链。
 
-**ext** (object, 必选) — 扩展信息对象，客户端应当忽略不认识的字段。
+**type** (string, 必选) — 指示软件包格式类型，决定下游如何从 `src` 提取 rootfs。
+  - `"tarball"` — 纯 tar 归档。下游直接解压 `src` 指向的文件，再按 `ext.find` 定位 rootfs。
+  - `"oci"` — OCI Image Layout 格式。下游需先解压外层归档得到 OCI 目录结构，然后按 OCI Image Layout 规范解析 `index.json → manifest → layer blobs` 提取最内层 tar，最后按 `ext.find` 定位 rootfs。
 
-- `ext.hash_val` (string) — 可选值为 `SKIP` 字符串或 `<算法:hash字符串>`。算法遵循小写格式，限定于以下枚举列表，客户端需编码这些算法的解析器。
+**ext** (object, 可选) — 扩展信息对象，可以整体省略。客户端应当忽略不认识的字段。
 
-  ```text
-  sha256
-  sha512
-  b2
-  md5
-  sha1
-  ```
+  - `ext.hash_val` (string, 可选) — 未提供时表示上游未提供校验值（语义等同 `SKIP`）。提供时取值为 `SKIP` 字符串或 `<算法:hash字符串>`。算法遵循小写格式，限定于以下枚举列表，客户端需编码这些算法的解析器。
 
-  未来会根据实际需求修订规范，以扩展支持的算法。
+    ```text
+    sha256
+    sha512
+    b2
+    md5
+    sha1
+    ```
 
-- `ext.find` (string | number) — 指示归档中 rootfs 的位置。
-  - `"."` 或 `0` — rootfs 位于归档根目录，直接解压即可。
-  - 正整数（如 `1`, `2`, `3`）— 需要剥离相应层数的目录前缀（等效于 `tar --strip-components=N`）。
-  - 字符串（如 `"./rootfs"`, `"rootfs/"`, `"/path/to/rootfs"`）— rootfs 位于归档内该路径的子目录中。
+    未来会根据实际需求修订规范，以扩展支持的算法。
+
+  - `ext.find` (string | number, 可选) — 指示归档中 rootfs 的位置，缺省为 `0`（根目录）。
+    - `0` 或缺省 — rootfs 位于归档根目录，直接解压即可。
+    - 正整数（如 `1`, `2`, `3`）— 需要剥离相应层数的目录前缀（等效于 `tar --strip-components=N`）。
+    - 字符串（如 `"root.x86_64"`, `"./rootfs"`）— rootfs 位于归档内该路径的子目录中。
+    - `"."` 已废弃，应省略该字段或使用 `0`。
 
 ---
 
@@ -121,7 +126,7 @@ JSON 格式的仓库索引，由编排脚本 `build_INDEX.py` 聚合所有小程
 
 ```json
 {
-  "version": "v4",
+  "version": "v5",
   "entries": [
     {
       "name": "rocky",
@@ -145,7 +150,7 @@ JSON 格式的仓库索引，由编排脚本 `build_INDEX.py` 聚合所有小程
 
 | 字段 | 类型 | 说明 |
 | ------ | ------ | ------ |
-| `version` | string | 规范版本标识，当前为 `"v4"` |
+| `version` | string | 规范版本标识，当前为 `"v5"` |
 | `entries` | array | 发行版条目列表，按文件名排序 |
 | `entries[].name` | string | 发行版简称，由小程序的 `info` 输出 |
 | `entries[].desc` | string | 发行版描述，由小程序的 `info` 输出 |

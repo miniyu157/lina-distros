@@ -1,9 +1,9 @@
 仓库简介：
-  这是一个存储发行版源的仓库
+  这是一个存储发行版源的仓库。
 
-各个文件详情：
+文件结构：
   文件夹中的可执行文件，例如 distros/alpine.sh，是发行版小程序，
-  发行版小程序实现 options、info、get 子命令。
+  发行版小程序需要根据 SPEC.md 实现 options、info、get 子命令。
   小程序的 options、info 等命令只需要在索引部署时的CI流运行一次，由 build_INDEX.py 脚本生成仓库索引时调用。
   build_INDEX.py --version 可以获取规范版本标识，build_INDEX.py [dir...] 即可生成仓库索引到标准输出，部署仓库时通常需要重定向到 INDEX 文件。
 

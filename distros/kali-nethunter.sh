@@ -41,9 +41,9 @@ cmd::get() {
     cat << EOF
 {
   "src": "${src}",
+  "type": "tarball",
   "ext": {
-    "hash_val": "sha256:${hash_val}",
-    "find": "."
+    "hash_val": "sha256:${hash_val}"
   }
 }
 EOF

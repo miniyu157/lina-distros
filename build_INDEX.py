@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-VERSION = "v4"
+VERSION = "v5"
 
 
 def validate_path(path: str) -> Path:

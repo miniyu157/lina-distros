@@ -81,9 +81,9 @@ cmd::get() {
     cat << EOF
 {
   "src": "${src}",
+  "type": "oci",
   "ext": {
-    "hash_val": "sha256:${hash_val}",
-    "find": "."
+    "hash_val": "sha256:${hash_val}"
   }
 }
 EOF

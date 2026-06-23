@@ -39,9 +39,9 @@ cmd::get() {
     cat << EOF
 {
   "src": "${src}",
+  "type": "tarball",
   "ext": {
-    "hash_val": "md5:${hash_val}",
-    "find": 0
+    "hash_val": "md5:${hash_val}"
   }
 }
 EOF
