@@ -7,7 +7,7 @@ cmd::options() {
     cat << 'EOF'
 {
   "archs": ["x86_64", "aarch64", "armhf"],
-  "versions": ["bookworm", "bullseye", "trixie", "forky"],
+  "versions": ["14", "forky", "13", "trixie", "12", "bookworm", "11", "bullseye"],
   "mirrors": [
     "http://images.linuxcontainers.org"
   ]
@@ -39,7 +39,16 @@ cmd::get() {
             ;;
     esac
 
-    local list_url="${mirror}/images/debian/${version}/${lxc_arch}/default/"
+    local codename
+    case "$version" in
+        11) codename="bullseye" ;;
+        12) codename="bookworm" ;;
+        13) codename="trixie" ;;
+        14) codename="forky" ;;
+        *) codename="$version" ;;
+    esac
+
+    local list_url="${mirror}/images/debian/${codename}/${lxc_arch}/default/"
     local listing=$(curl -4fsSL --connect-timeout 10 --max-time 30 "$list_url")
     [[ -z $listing ]] && {
         printf "Error: Failed to fetch directory listing: %s\n" "$list_url" >&2
