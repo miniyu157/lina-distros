@@ -1,16 +1,42 @@
-# 发行版小程序接口及索引规范 V5
+# 发行版小程序接口及索引规范
 
 ## 概述
 
-发行版小程序是一个可执行文件，对外暴露三个子命令：`options`、`info`、`get`。
+发行版小程序是一个可执行文件，通过子命令形式调用，输出 JSON 数据。
+
+*用法示例:*
+
+```console
+❯ distros/fedora.sh
+usage: distros/fedora.sh {get|info|options}
+  get <version> <arch> <mirror>
+```
 
 三个子命令均输出 JSON 到标准输出，格式固定，不允许额外包装层。
 
 ---
 
-## 小程序接口
+## 小程序子命令
 
-抓取内容时应当减少 HTTP 请求次数。
+**options:**
+
+输出小程序选项，通常在 CI 阶段执行。
+
+*示例:*
+
+```json
+{
+  "archs": ["x86_64", "aarch64", "ppc64le", "s390x"],
+  "versions": ["8", "9", "10"],
+  "mirrors": [
+    "https://dl.rockylinux.org/pub/rocky",
+    "https://mirrors.ustc.edu.cn/rocky",
+    "https://mirrors.aliyun.com/rockylinux"
+  ]
+}
+```
+
+小程序应当尽量减少 HTTP 请求次数。
 
 遇到错误应当打印错误信息到标准错误，然后以非 0 状态码退出。
 
@@ -93,12 +119,15 @@ arch: 通常不会传入 arm64、amd64 风格的参数，如果需要在 url 中
 **src** (string, 必选) — 发行版 rootfs 归档文件的下载直链。
 
 **type** (string, 必选) — 指示软件包格式类型，决定下游如何从 `src` 提取 rootfs。
-  - `"tarball"` — 纯 tar 归档。下游直接解压 `src` 指向的文件，再按 `ext.find` 定位 rootfs。
-  - `"oci"` — OCI Image Layout 格式。下游需先解压外层归档得到 OCI 目录结构，然后按 OCI Image Layout 规范解析 `index.json → manifest → layer blobs` 提取最内层 tar，最后按 `ext.find` 定位 rootfs。
+
+- `"tarball"` — 纯 tar 归档。下游直接解压 `src` 指向的文件，再按 `ext.find` 定位 rootfs。
+- `"oci"` — OCI Image Layout 格式。下游需先解压外层归档得到 OCI 目录结构，然后按
+  OCI Image Layout 规范解析 `index.json → manifest → layer blobs` 提取最内层 tar，
+  最后按 `ext.find` 定位 rootfs。
 
 **ext** (object, 可选) — 扩展信息对象，可以整体省略。客户端应当忽略不认识的字段。
 
-  - `ext.hash_val` (string, 可选) — 未提供时表示上游未提供校验值（语义等同 `SKIP`）。提供时取值为 `SKIP` 字符串或 `<算法:hash字符串>`。算法遵循小写格式，限定于以下枚举列表，客户端需编码这些算法的解析器。
+- `ext.hash_val` (string, 可选) — 未提供时表示上游未提供校验值（语义等同 `SKIP`）。提供时取值为 `SKIP` 字符串或 `<算法:hash字符串>`。算法遵循小写格式，限定于以下枚举列表，客户端需编码这些算法的解析器。
 
     ```text
     sha256
@@ -110,11 +139,11 @@ arch: 通常不会传入 arm64、amd64 风格的参数，如果需要在 url 中
 
     未来会根据实际需求修订规范，以扩展支持的算法。
 
-  - `ext.find` (string | number, 可选) — 指示归档中 rootfs 的位置，缺省为 `0`（根目录）。
-    - `0` 或缺省 — rootfs 位于归档根目录，直接解压即可。
-    - 正整数（如 `1`, `2`, `3`）— 需要剥离相应层数的目录前缀（等效于 `tar --strip-components=N`）。
-    - 字符串（如 `"root.x86_64"`, `"./rootfs"`）— rootfs 位于归档内该路径的子目录中。
-    - `"."` 已废弃，应省略该字段或使用 `0`。
+- `ext.find` (string | number, 可选) — 指示归档中 rootfs 的位置，缺省为 `0`（根目录）。
+  - `0` 或缺省 — rootfs 位于归档根目录，直接解压即可。
+  - 正整数（如 `1`, `2`, `3`）— 需要剥离相应层数的目录前缀（等效于 `tar --strip-components=N`）。
+  - 字符串（如 `"root.x86_64"`, `"./rootfs"`）— rootfs 位于归档内该路径的子目录中。
+  - `"."` 已废弃，应省略该字段或使用 `0`。
 
 ---
 
