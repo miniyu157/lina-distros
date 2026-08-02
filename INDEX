@@ -35,7 +35,7 @@
         "hash": "eda1136",
         "options": {
           "archs": ["x86_64"],
-          "versions": ["latest", "2026.07.01", "2026.06.01", "2026.05.01"],
+          "versions": ["latest", "2026.08.01", "2026.07.01", "2026.06.01"],
           "mirrors": ["https://mirrors.kernel.org/archlinux/iso/", "https://mirrors.tuna.tsinghua.edu.cn/archlinux/iso/", "https://mirrors.aliyun.com/archlinux/iso/", "https://mirrors.ustc.edu.cn/archlinux/iso/"]
         }
       }
